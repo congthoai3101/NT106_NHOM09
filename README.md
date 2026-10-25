@@ -24,11 +24,31 @@
 
 ## 4. Cấu trúc tài liệu
 
-- `docs/requirements.md`: Phân tích yêu cầu hệ thống.
-- `docs/game-rules.md`: Đặc tả luật chơi.
-- `docs/tcp-protocol.md`: Thiết kế giao thức TCP.
-- `docs/database-design.md`: Thiết kế cơ sở dữ liệu.
-- `docs/diagrams/`: Các sơ đồ thiết kế hệ thống.
+docs/
+├── requirements.md
+├── game-rules.md
+├── tcp-protocol.md
+├── database-design.md
+└── uml/
+    ├── use-case.md
+    ├── class-diagram.md
+    └── sequence-diagram.md
+
+    Mô tả
+
+docs/requirements.md: Phân tích yêu cầu chức năng.
+
+docs/game-rules.md: Thiết kế luật chơi Tiến Lên Miền Nam.
+
+docs/tcp-protocol.md: Thiết kế giao thức TCP và định dạng thông điệp trao đổi giữa client và server.
+
+docs/database-design.md: Thiết kế cơ sở dữ liệu.
+
+docs/uml/use-case.md: Sơ đồ Use Case.
+
+docs/uml/class-diagram.md: Sơ đồ lớp.
+
+docs/uml/sequence-diagram.md: Sơ đồ tuần tự mô tả luồng tạo phòng, bắt đầu ván, đánh bài và xử lý mất kết nối.
 
 ## 5. Tiến độ
 
