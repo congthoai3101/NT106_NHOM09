@@ -1,0 +1,59 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Bảng Người dùng
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  username     String    @unique
+  passwordHash String    @map("password_hash")
+  avatarUrl    String?   @map("avatar_url")
+  isVerified   Boolean   @default(false) @map("is_verified")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt      @map("updated_at")
+
+  // Quan hệ
+  authTokens    AuthToken[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+// 2. Loại token dùng cho xác thực và đổi mật khẩu
+enum AuthTokenType {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+model AuthToken {
+  id        String        @id @default(uuid())
+  token     String        @unique
+  type      AuthTokenType
+  userId    String        @map("user_id")
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime      @map("expires_at")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  @@index([token])
+  @@map("auth_tokens")
+}
+
+// 3. Quản lý phiên đăng nhập & Đăng xuất (Refresh Token)
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([token])
+  @@map("refresh_tokens")
+}
