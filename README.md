@@ -29,6 +29,8 @@ docs/
 ├── requirements.md
 ├── game-rules.md
 ├── tcp-protocol.md
+├── protocol-testing.md
+├── network-room-design.md
 ├── database-design.md
 └── uml/
     ├── use-case.md
@@ -38,12 +40,14 @@ docs/
 
 ### Mô tả tài liệu
 
-- **`docs/requirements.md`**: Phân tích yêu cầu chức năng.
-- **`docs/game-rules.md`**: Thiết kế luật chơi Tiến Lên Miền Nam.
+- **`docs/requirements.md`**: Phân tích yêu cầu chức năng và phi chức năng của hệ thống.
+- **`docs/game-rules.md`**: Đặc tả luật chơi Tiến Lên Miền Nam.
 - **`docs/tcp-protocol.md`**: Thiết kế giao thức TCP và định dạng thông điệp trao đổi giữa client và server.
-- **`docs/database-design.md`**: Thiết kế cơ sở dữ liệu.
-- **`docs/uml/use-case.md`**: Sơ đồ Use Case.
-- **`docs/uml/class-diagram.md`**: Sơ đồ lớp.
+- **`docs/protocol-testing.md`**: Đặc tả giao thức và kế hoạch kiểm thử các trường hợp giao tiếp mạng.
+- **`docs/network-room-design.md`**: Thiết kế xử lý kết nối mạng, quản lý phòng chơi, đồng bộ trạng thái và xử lý mất kết nối.
+- **`docs/database-design.md`**: Thiết kế cơ sở dữ liệu PostgreSQL thông qua Supabase.
+- **`docs/uml/use-case.md`**: Sơ đồ Use Case mô tả tác nhân và chức năng hệ thống.
+- **`docs/uml/class-diagram.md`**: Sơ đồ lớp mô tả cấu trúc và quan hệ giữa các lớp.
 - **`docs/uml/sequence-diagram.md`**: Sơ đồ tuần tự mô tả luồng tạo phòng, bắt đầu ván, đánh bài và xử lý mất kết nối.
 
 ## 5. Tiến độ
