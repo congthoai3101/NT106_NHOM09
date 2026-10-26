@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiến Lên Miền Nam Online Desktop</title>
+  <link rel="stylesheet" href="./auth.css">
+</head>
+<body>
+
+  <!-- BACKGROUND: BLURRED CASINO CARD PLAYING TABLE -->
+  <div class="background-layer"></div>
+  <div class="ambient-glow"></div>
+
+  <!-- CUSTOM ELECTRON TITLEBAR (DRAGGABLE REGION) -->
+  <header class="electron-titlebar">
+    <div class="titlebar-brand">
+      <span>TIẾN LÊN MIỀN NAM — UIT NT106</span>
+    </div>
+    <div class="titlebar-controls">
+      <button class="window-btn" id="btnMinimize" title="Thu nhỏ" type="button">
+        <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+      </button>
+      <button class="window-btn" id="btnMaximize" title="Phóng to" type="button">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
+      </button>
+      <button class="window-btn close" id="btnClose" title="Đóng ứng dụng" type="button">
+        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- APP STAGE -->
+  <main class="app-stage">
+
+    <!-- 3D CARTOON LOGO -->
+    <div class="logo-container">
+      <h1 class="logo-main">TIẾN LÊN</h1>
+      <div class="logo-sub">
+        <svg class="spade-icon" viewBox="0 0 24 24"><path d="M12 2C9 7 4 9 4 14c0 3.3 2.7 6 6 6 .8 0 1.6-.2 2-.5.4.3 1.2.5 2 .5 3.3 0 6-2.7 6-6 0-5-5-7-8-12zm-1 18h2v2h-2v-2z"/></svg>
+        <span>MIỀN NAM</span>
+        <svg class="spade-icon" viewBox="0 0 24 24"><path d="M12 2C9 7 4 9 4 14c0 3.3 2.7 6 6 6 .8 0 1.6-.2 2-.5.4.3 1.2.5 2 .5 3.3 0 6-2.7 6-6 0-5-5-7-8-12zm-1 18h2v2h-2v-2z"/></svg>
+      </div>
+      <div class="logo-tag">ONLINE DESKTOP</div>
+    </div>
+
+    <!-- GLASSMORPHISM AUTH CARD -->
+    <div class="main-auth-card" id="mainCard">
+
+      <!-- TABS: ĐĂNG NHẬP / ĐĂNG KÝ -->
+      <nav class="card-tabs">
+        <button class="tab-item active" id="tabLogin" type="button">ĐĂNG NHẬP</button>
+        <button class="tab-item" id="tabRegister" type="button">ĐĂNG KÝ</button>
+      </nav>
+
+      <!-- AVATAR CAROUSEL SELECTOR (8 AVATARS DIVERSE) -->
+      <div class="avatar-section">
+        <div class="avatar-carousel-container">
+          <button type="button" class="btn-avatar-nav prev" id="btnPrevAvatar" title="Avatar trước">
+            <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+          </button>
+          
+          <div class="avatar-wrapper" id="avatarWrapper" title="Bấm để đổi avatar kế tiếp">
+            <img src="../../assets/avatars/avatar_chibi_boy.jpg" alt="Chibi Avatar" class="avatar-img" id="avatarImg">
+            <!-- Sparkle Stars SVGs -->
+            <svg class="sparkle-star star-1" viewBox="0 0 24 24"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>
+            <svg class="sparkle-star star-2" viewBox="0 0 24 24"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>
+            <svg class="sparkle-star star-3" viewBox="0 0 24 24"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>
+          </div>
+
+          <button type="button" class="btn-avatar-nav next" id="btnNextAvatar" title="Avatar kế tiếp">
+            <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+          </button>
+        </div>
+        <span class="avatar-caption" id="avatarCaption">Thần Bài Nhí (1/8)</span>
+      </div>
+
+      <!-- FORM -->
+      <form class="form-container" id="authForm" autocomplete="on">
+        
+        <!-- TRƯỜNG THÊM KHI ĐĂNG KÝ: TÊN HIỂN THỊ -->
+        <div class="form-group register-fields" id="groupUsername">
+          <svg class="input-icon" viewBox="0 0 24 24">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+          <input type="text" id="regUsernameInput" class="form-input" placeholder="Tên hiển thị nhân vật">
+        </div>
+
+        <!-- Ô TÀI KHOẢN (EMAIL/SĐT) -->
+        <div class="form-group">
+          <svg class="input-icon" viewBox="0 0 24 24">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+          <input type="text" id="accountInput" class="form-input" placeholder="Tài khoản (Email/SĐT)" required>
+        </div>
+
+        <!-- Ô MẬT KHẨU -->
+        <div class="form-group">
+          <svg class="input-icon" viewBox="0 0 24 24">
+            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+          </svg>
+          <input type="password" id="passwordInput" class="form-input" placeholder="Mật khẩu" required minlength="6">
+          <button type="button" class="btn-toggle-eye" id="togglePassword">Hiện</button>
+        </div>
+
+        <!-- TRƯỜNG THÊM KHI ĐĂNG KÝ: XÁC NHẬN MẬT KHẨU -->
+        <div class="form-group register-fields" id="groupConfirmPassword">
+          <svg class="input-icon" viewBox="0 0 24 24">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+          </svg>
+          <input type="password" id="confirmPasswordInput" class="form-input" placeholder="Xác nhận lại mật khẩu">
+        </div>
+
+        <!-- TÙY CHỌN: GHI NHỚ ĐĂNG NHẬP & QUÊN MẬT KHẨU -->
+        <div class="options-row login-only-options">
+          <label class="remember-group">
+            <input type="checkbox" id="rememberMe" class="remember-checkbox" checked>
+            <span>Ghi nhớ đăng nhập</span>
+          </label>
+          <a class="forgot-link" id="linkForgotPassword">Quên mật khẩu?</a>
+        </div>
+
+        <!-- 3D ACTION BUTTON: VÀO SÒNG -->
+        <button type="submit" class="btn-action-3d" id="btnAction">
+          <span class="btn-text" id="btnActionText">VÀO SÒNG</span>
+          <div class="btn-spinner"></div>
+        </button>
+
+      </form>
+
+      <!-- SOCIAL QUICK CONNECT -->
+      <div class="social-section">
+        <span>Hoặc kết nối nhanh qua:</span>
+        <button class="social-btn google" id="btnGoogleLogin" type="button" title="Đăng nhập với Google">
+          <svg viewBox="0 0 24 24">
+            <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+          </svg>
+        </button>
+        <button class="social-btn facebook" id="btnFacebookLogin" type="button" title="Đăng nhập với Facebook">
+          <svg viewBox="0 0 24 24">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- FOOTER SWITCH AUTH -->
+      <div class="switch-auth-link">
+        <span id="switchAuthBtn">Chưa có tài khoản? Đăng ký ngay</span>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-notice" id="toastNotice">
+    <span id="toastMsg">Chào mừng đến với Tiến Lên Miền Nam!</span>
+  </div>
+
+  <script src="./authView.js"></script>
+</body>
+</html>
