@@ -5,6 +5,7 @@ import {
   AuthState,
   LoginFormInput,
   RegisterFormInput,
+  ForgotPasswordFormInput,
   AuthResponse
 } from '../../shared/types/auth.types';
 
@@ -14,7 +15,7 @@ export type StateListener = (state: AuthState) => void;
  * Global Auth Store quản lý trạng thái phiên đăng nhập tập trung (Singleton)
  * Áp dụng Observer Pattern (Pub/Sub) để thông báo cho toàn bộ UI tự động re-render
  */
-class AuthStore {
+class AuthStore { 
   private state: AuthState = {
     user: null,
     session: null,
@@ -174,6 +175,13 @@ class AuthStore {
         message: err.message || 'Đăng ký thất bại.'
       };
     }
+  }
+
+  /**
+   * Yêu cầu gửi email khôi phục mật khẩu
+   */
+  public async forgotPassword(input: ForgotPasswordFormInput): Promise<AuthResponse> {
+    return AuthService.forgotPassword(input.email);
   }
 
   /**
