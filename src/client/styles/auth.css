@@ -1,0 +1,732 @@
+:root {
+  /* Vietnamese Sidewalk & Casino Emerald-Gold Palette */
+  --bg-deep: #060e09;
+  --glass-card: rgba(16, 28, 22, 0.84);
+  --glass-card-border: rgba(245, 197, 66, 0.38);
+  
+  --gold-primary: #F5C542;
+  --gold-secondary: #EAB308;
+  --gold-dark: #B45309;
+  --gold-glow: rgba(245, 197, 66, 0.4);
+
+  --emerald-primary: #10B981;
+  --emerald-light: #34D399;
+  --emerald-dark: #047857;
+  --emerald-deep: #064E3B;
+  --emerald-glow: rgba(16, 185, 129, 0.45);
+
+  --input-bg: rgba(8, 16, 12, 0.75);
+  --input-border: rgba(245, 197, 66, 0.28);
+  --input-focus-border: #10B981;
+
+  --text-white: #FFFFFF;
+  --text-sub: rgba(255, 255, 255, 0.75);
+  --text-muted: rgba(255, 255, 255, 0.5);
+
+  --color-error: #EF4444;
+  --color-success: #10B981;
+
+  --transition-smooth: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-deep);
+  color: var(--text-white);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   BLURRED CARD PLAYING TABLE BACKGROUND (DEPTH OF FIELD / BOKEH)
+   ========================================================================== */
+.background-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at center, rgba(0, 0, 0, 0.12) 0%, rgba(3, 10, 6, 0.72) 100%),
+    url('../../assets/backgrounds/blurred_card_table_bg.jpg'),
+    url('../../assets/blurred_card_table_bg.jpg'),
+    url('../../assets/vietnam_sidewalk_bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: contrast(106%) brightness(95%);
+  z-index: 1;
+}
+
+/* Ambient glow & bokeh pulse */
+.ambient-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  background: 
+    radial-gradient(circle at 18% 20%, rgba(245, 197, 66, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 82% 25%, rgba(16, 185, 129, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 50% 85%, rgba(245, 197, 66, 0.12) 0%, transparent 40%);
+  animation: pulseAmbient 7s ease-in-out infinite alternate;
+}
+
+@keyframes pulseAmbient {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* ==========================================================================
+   CUSTOM ELECTRON TITLEBAR (DRAGGABLE)
+   ========================================================================== */
+.electron-titlebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 0 16px;
+  z-index: 1000;
+  -webkit-app-region: drag;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, transparent 100%);
+}
+
+.titlebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.5px;
+}
+
+.titlebar-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.window-btn {
+  width: 32px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+}
+
+.window-btn svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.window-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.window-btn.close:hover {
+  background: #EF4444;
+  border-color: #DC2626;
+  color: #fff;
+}
+
+/* ==========================================================================
+   APP STAGE CONTAINER (CENTERED)
+   ========================================================================== */
+.app-stage {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 520px;
+  padding: 10px;
+}
+
+/* ==========================================================================
+   CARTOON 3D LOGO: "TIẾN LÊN MIỀN NAM ONLINE DESKTOP"
+   ========================================================================== */
+.logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.logo-main {
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #A7F3D0 0%, #34D399 40%, #059669 85%, #064E3B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 0 #F5C542) 
+          drop-shadow(0 4px 0 #B45309) 
+          drop-shadow(0 6px 12px rgba(16, 185, 129, 0.6));
+}
+
+.logo-sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold-primary);
+  text-shadow: 0 1px 0 #92400E, 0 2px 6px rgba(245, 197, 66, 0.5);
+  margin-top: 2px;
+}
+
+.spade-icon {
+  width: 16px;
+  height: 16px;
+  fill: var(--emerald-primary);
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}
+
+.logo-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  margin-top: 2px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* ==========================================================================
+   GLASSMORPHISM MAIN AUTH CARD
+   ========================================================================== */
+.main-auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--glass-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-card-border);
+  border-radius: 24px;
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.78), 
+    0 0 35px rgba(245, 197, 66, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform var(--transition-smooth), box-shadow var(--transition-smooth);
+}
+
+/* SHAKE ANIMATION ON VALIDATION ERROR */
+@keyframes cardShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-9px); }
+  40%, 80% { transform: translateX(9px); }
+}
+
+.main-auth-card.shake {
+  animation: cardShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* ==========================================================================
+   TABS: "ĐĂNG NHẬP" & "ĐĂNG KÝ"
+   ========================================================================== */
+.card-tabs {
+  display: flex;
+  width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.tab-item {
+  flex: 1;
+  padding: 8px 0 10px 0;
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-align: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.55);
+  transition: all var(--transition-smooth);
+  position: relative;
+}
+
+.tab-item:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tab-item.active {
+  color: var(--gold-primary);
+  text-shadow: 0 0 12px var(--gold-glow);
+}
+
+/* Glow line under active tab */
+.tab-item.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 15%;
+  width: 70%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+  border-radius: 999px;
+  box-shadow: 0 0 10px var(--gold-primary);
+}
+
+/* ==========================================================================
+   AVATAR CAROUSEL SELECTOR (8-10 AVATARS WITH NAV BUTTONS)
+   ========================================================================== */
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 14px;
+  position: relative;
+  width: 100%;
+}
+
+.avatar-carousel-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  position: relative;
+}
+
+/* Nav arrows */
+.btn-avatar-nav {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(245, 197, 66, 0.4);
+  color: var(--gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+}
+
+.btn-avatar-nav svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.btn-avatar-nav:hover {
+  background: rgba(245, 197, 66, 0.25);
+  border-color: var(--gold-primary);
+  color: #FFF;
+  transform: scale(1.12);
+  box-shadow: 0 0 10px rgba(245, 197, 66, 0.45);
+}
+
+.btn-avatar-nav:active {
+  transform: scale(0.92);
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 2px solid var(--gold-primary);
+  box-shadow: 0 0 18px rgba(245, 197, 66, 0.35);
+  background: #0d1e16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform var(--transition-smooth), box-shadow var(--transition-smooth);
+}
+
+.avatar-wrapper:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 24px rgba(245, 197, 66, 0.6);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Sparkling Stars */
+.sparkle-star {
+  position: absolute;
+  fill: var(--gold-primary);
+  pointer-events: none;
+  animation: starTwinkle 2.5s ease-in-out infinite alternate;
+}
+
+.star-1 { top: -2px; right: -6px; width: 14px; height: 14px; animation-delay: 0.2s; }
+.star-2 { bottom: 4px; left: -8px; width: 12px; height: 12px; animation-delay: 0.8s; }
+.star-3 { top: 12px; left: -6px; width: 9px; height: 9px; animation-delay: 1.4s; }
+
+@keyframes starTwinkle {
+  0% { transform: scale(0.7) rotate(0deg); opacity: 0.4; }
+  100% { transform: scale(1.2) rotate(15deg); opacity: 1; }
+}
+
+.avatar-caption {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gold-primary);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: color var(--transition-smooth);
+  letter-spacing: 0.4px;
+}
+
+.avatar-caption:hover {
+  color: #FFF;
+  text-shadow: 0 0 8px var(--gold-glow);
+}
+
+/* ==========================================================================
+   FORM PANELS & INPUTS
+   ========================================================================== */
+.form-container {
+  width: 100%;
+}
+
+.form-group {
+  position: relative;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  fill: rgba(245, 197, 66, 0.7);
+  pointer-events: none;
+  transition: fill var(--transition-smooth);
+}
+
+.form-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 42px 0 44px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  color: var(--text-white);
+  font-size: 13.5px;
+  font-weight: 500;
+  outline: none;
+  transition: all var(--transition-smooth);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Focus State: Emerald Green Glow Ring */
+.form-input:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 12px var(--emerald-glow), inset 0 0 4px rgba(16, 185, 129, 0.15);
+  background: rgba(12, 24, 18, 0.9);
+}
+
+.form-group:focus-within .input-icon {
+  fill: var(--emerald-primary);
+}
+
+.btn-toggle-eye {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--emerald-light);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: color var(--transition-smooth);
+}
+
+.btn-toggle-eye:hover {
+  color: #fff;
+  text-shadow: 0 0 8px var(--emerald-glow);
+}
+
+/* ==========================================================================
+   OPTIONS ROW: REMEMBER ME & FORGOT PASSWORD
+   ========================================================================== */
+.options-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 2px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+}
+
+.remember-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  color: var(--text-sub);
+}
+
+.remember-checkbox {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--emerald-primary);
+  cursor: pointer;
+}
+
+.forgot-link {
+  color: var(--gold-primary);
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: color var(--transition-smooth), text-decoration var(--transition-smooth);
+}
+
+.forgot-link:hover {
+  color: #FDE047;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   ACTION 3D BUTTON: "VÀO SÒNG"
+   ========================================================================== */
+.btn-action-3d {
+  width: 100%;
+  height: 48px;
+  border-radius: 999px;
+  border: 2px solid var(--gold-primary);
+  background: linear-gradient(180deg, #10B981 0%, #059669 45%, #047857 100%);
+  color: #FFFFFF;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 
+    0 5px 0 #064E3B, 
+    0 10px 24px rgba(16, 185, 129, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.btn-action-3d:hover {
+  transform: translateY(-2px) scale(1.02);
+  background: linear-gradient(180deg, #34D399 0%, #059669 45%, #047857 100%);
+  box-shadow: 
+    0 7px 0 #064E3B, 
+    0 14px 28px rgba(16, 185, 129, 0.6);
+}
+
+.btn-action-3d:active {
+  transform: translateY(3px) scale(0.99);
+  box-shadow: 
+    0 2px 0 #064E3B, 
+    0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-action-3d:disabled {
+  background: #334155;
+  border-color: #64748B;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Spinner inside button */
+.btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-action-3d.loading .btn-text {
+  display: none;
+}
+
+.btn-action-3d.loading .btn-spinner {
+  display: block;
+}
+
+/* ==========================================================================
+   QUICK SOCIAL CONNECT & FOOTER
+   ========================================================================== */
+.social-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.social-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+}
+
+.social-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: rgba(255, 255, 255, 0.85);
+  transition: fill var(--transition-smooth);
+}
+
+.social-btn.google:hover {
+  background: rgba(234, 67, 53, 0.2);
+  border-color: #EA4335;
+}
+
+.social-btn.google:hover svg {
+  fill: #EA4335;
+}
+
+.social-btn.facebook:hover {
+  background: rgba(24, 119, 242, 0.2);
+  border-color: #1877F2;
+}
+
+.social-btn.facebook:hover svg {
+  fill: #1877F2;
+}
+
+.switch-auth-link {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--text-sub);
+  text-align: center;
+}
+
+.switch-auth-link span {
+  color: var(--gold-primary);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: text-decoration var(--transition-smooth);
+}
+
+.switch-auth-link span:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   TOAST NOTIFICATION (UPPER RIGHT)
+   ========================================================================== */
+.toast-notice {
+  position: absolute;
+  top: 50px;
+  right: 20px;
+  background: rgba(15, 25, 20, 0.95);
+  backdrop-filter: blur(12px);
+  border-left: 4px solid var(--color-success);
+  border-radius: 8px;
+  padding: 11px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  opacity: 0;
+  transform: translateX(40px);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast-notice.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Extra register fields transition */
+.register-fields {
+  display: none;
+}
+
+.mode-register .register-fields {
+  display: block;
+}
+
+.mode-register .login-only-options {
+  display: none;
+}
