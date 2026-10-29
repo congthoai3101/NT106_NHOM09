@@ -6,83 +6,99 @@ import {
   AuthResponse
 } from '../../shared/types/auth.types';
 
+// Cổng Web API Gateway (Lấy từ .env hoặc mặc định 5000 / 20000)
+const API_PORT = process.env.PORT || 5000;
+const API_BASE_URL = `http://localhost:${API_PORT}/api`;
+
 /**
- * Service đóng gói toàn bộ các thao tác giao tiếp với Supabase Auth SDK
- * Xử lý nghiệp vụ, liên kết bảng profiles và chuẩn hóa thông báo lỗi tiếng Việt
+ * AuthService - Giao tiếp với Web API Gateway (src/server.ts)
+ * Tuân thủ mô hình 3 lớp (3-tier Architecture) đúng theo Slide báo cáo:
+ * Desktop Client -> Node.js Express Web API -> Supabase Auth & PostgreSQL
  */
 export class AuthService {
   /**
-   * 1. Đăng ký tài khoản mới kèm Tên hiển thị (username)
-   * Tự động sinh avatar hoạt hình thông qua DiceBear API
+   * 1. Đăng ký tài khoản qua Web API Gateway: POST /api/auth/register
    */
-  static async register(input: RegisterFormInput): Promise<AuthResponse> {
+  static async register(input: RegisterFormInput & { avatar_url?: string }): Promise<AuthResponse> {
     try {
-      const defaultAvatarUrl = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(
-        input.username
-      )}`;
-
-      const { data, error } = await supabase.auth.signUp({
-        email: input.email,
-        password: input.password,
-        options: {
-          data: {
-            username: input.username,
-            avatar_url: defaultAvatarUrl
-          }
-        }
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: input.email,
+          password: input.password,
+          username: input.username,
+          avatarUrl: input.avatar_url || 'avatar_chibi_boy'
+        })
       });
 
-      if (error) {
-        throw new Error(this.formatErrorMessage(error.message));
+      const resJson = await response.json();
+
+      if (!response.ok || !resJson.success) {
+        throw new Error(this.formatErrorMessage(resJson.message || 'Đăng ký thất bại'));
       }
 
-      // Đảm bảo tạo bản ghi trong bảng public.profiles nếu chưa có trigger
-      if (data.user) {
-        await this.upsertProfile({
-          id: data.user.id,
-          username: input.username,
-          avatarUrl: defaultAvatarUrl,
-          createdAt: new Date().toISOString()
-        });
+      // Tự động đồng bộ session vào Supabase Client trên Desktop nếu có session
+      if (resJson.data?.session) {
+        await supabase.auth.setSession(resJson.data.session);
       }
 
       return {
         success: true,
-        message: 'Đăng ký tài khoản thành công!',
-        data
+        message: resJson.message || 'Đăng ký tài khoản thành công!',
+        data: resJson.data
       };
     } catch (err: any) {
       return {
         success: false,
-        message: err.message || 'Đăng ký thất bại.',
+        message: err.message || 'Không thể kết nối đến Web API Gateway.',
         error: err
       };
     }
   }
 
   /**
-   * 2. Đăng nhập bằng Email và Mật khẩu
+   * 2. Đăng nhập qua Web API Gateway: POST /api/auth/login
+   * Trả về JWT Access Token & Refresh Token
    */
   static async login(input: LoginFormInput): Promise<AuthResponse> {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: input.email,
-        password: input.password
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: input.email,
+          password: input.password
+        })
       });
 
-      if (error) {
-        throw new Error(this.formatErrorMessage(error.message));
+      const resJson = await response.json();
+
+      if (!response.ok || !resJson.success) {
+        throw new Error(this.formatErrorMessage(resJson.message || 'Đăng nhập thất bại'));
+      }
+
+      // Lưu trữ token và đồng bộ phiên đăng nhập vào Supabase client
+      if (resJson.data?.access_token && resJson.data?.refresh_token) {
+        await supabase.auth.setSession({
+          access_token: resJson.data.access_token,
+          refresh_token: resJson.data.refresh_token
+        });
       }
 
       return {
         success: true,
-        message: 'Đăng nhập thành công!',
-        data
+        message: resJson.message || 'Đăng nhập thành công!',
+        data: resJson.data
       };
     } catch (err: any) {
       return {
         success: false,
-        message: err.message || 'Đăng nhập thất bại.',
+        message: err.message || 'Không thể kết nối đến Web API Gateway.',
         error: err
       };
     }
@@ -93,9 +109,7 @@ export class AuthService {
    */
   static async forgotPassword(email: string): Promise<AuthResponse> {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'http://localhost:3000/reset-password'
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
 
       if (error) {
         throw new Error(this.formatErrorMessage(error.message));
@@ -115,7 +129,7 @@ export class AuthService {
   }
 
   /**
-   * 4. Cập nhật mật khẩu mới (khi người dùng đã xác nhận từ link email)
+   * 4. Cập nhật mật khẩu mới
    */
   static async resetPassword(newPassword: string): Promise<AuthResponse> {
     try {
@@ -145,27 +159,51 @@ export class AuthService {
    * 5. Đăng xuất khỏi hệ thống
    */
   static async logout(): Promise<void> {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('[Supabase Logout Error]:', error.message);
-      throw error;
+    try {
+      await supabase.auth.signOut();
+    } catch (error: any) {
+      console.error('[Logout Error]:', error.message);
     }
   }
 
   /**
-   * 6. Truy vấn thông tin hồ sơ chi tiết từ bảng public.profiles
+   * 6. Lấy profile bảo mật qua Header Authorization: Bearer <token>
+   * GET /api/profile/me
    */
   static async fetchProfile(userId: string): Promise<UserProfile | null> {
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      if (token) {
+        // Gọi Web API có kèm Bearer Token
+        const response = await fetch(`${API_BASE_URL}/profile/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const resJson = await response.json();
+          if (resJson.success && resJson.data) {
+            return {
+              id: resJson.data.id,
+              username: resJson.data.username,
+              avatarUrl: resJson.data.avatarUrl,
+              createdAt: resJson.data.createdAt
+            };
+          }
+        }
+      }
+
+      // Dự phòng truy vấn trực tiếp từ bảng profiles nếu chưa có token
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      if (error || !data) {
-        return null;
-      }
+      if (error || !data) return null;
 
       return {
         id: data.id,
@@ -180,27 +218,11 @@ export class AuthService {
   }
 
   /**
-   * Chèn hoặc cập nhật hồ sơ vào bảng public.profiles
-   */
-  private static async upsertProfile(profile: UserProfile): Promise<void> {
-    try {
-      await supabase.from('profiles').upsert({
-        id: profile.id,
-        username: profile.username,
-        avatar_url: profile.avatarUrl,
-        created_at: profile.createdAt
-      });
-    } catch (err) {
-      console.warn('[Upsert Profile Warning]:', err);
-    }
-  }
-
-  /**
-   * Dịch thông điệp lỗi tiếng Anh của Supabase sang tiếng Việt
+   * Dịch thông điệp lỗi tiếng Anh của Supabase / Server sang tiếng Việt
    */
   public static formatErrorMessage(msg: string): string {
     const lower = msg.toLowerCase();
-    if (lower.includes('invalid login credentials')) {
+    if (lower.includes('invalid login credentials') || lower.includes('sai email')) {
       return 'Email hoặc mật khẩu không chính xác.';
     }
     if (lower.includes('user already registered') || lower.includes('already exists')) {
@@ -212,10 +234,6 @@ export class AuthService {
     if (lower.includes('rate limit') || lower.includes('too many requests')) {
       return 'Bạn thao tác quá nhanh. Vui lòng chờ ít phút rồi thử lại.';
     }
-    if (lower.includes('email not confirmed')) {
-      return 'Tài khoản chưa được kích hoạt email. Vui lòng kiểm tra hòm thư.';
-    }
     return msg;
   }
 }
-
