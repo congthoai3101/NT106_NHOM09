@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#06120E">
+  <title>Đấu trường đêm — Tiến Lên Miền Nam</title>
+  <link rel="stylesheet" href="./lobby.css">
+  <link rel="stylesheet" href="./features.css">
+</head>
+<body class="auth-pending">
+  <div class="auth-guard" id="authGuard" role="status">Đang kiểm tra phiên đăng nhập...</div>
+  <div class="ambient ambient-left"></div>
+  <div class="ambient ambient-center"></div>
+
+  <aside class="sidebar">
+    <a class="brand" href="#" aria-label="Tiến Lên Miền Nam">
+      <span class="brand-mark" aria-hidden="true">♠</span>
+      <span class="brand-name">TIẾN LÊN<small>MIỀN NAM</small></span>
+    </a>
+    <div class="sidebar-label">MENU CHÍNH</div>
+    <nav class="main-nav" aria-label="Điều hướng chính">
+      <button class="nav-item active" type="button" data-nav="Sảnh chơi">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.8 12 3l9 7.8v9.1a1.1 1.1 0 0 1-1.1 1.1h-5.2v-6.2H9.3V21H4.1A1.1 1.1 0 0 1 3 19.9z"/></svg>
+        <span>Sảnh chơi</span><i></i>
+      </button>
+      <button class="nav-item" type="button" data-nav="Bảng xếp hạng">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8v3h4v3a5 5 0 0 1-4.2 4.9A5 5 0 0 1 13 16v2h4v3H7v-3h4v-2a5 5 0 0 1-2.8-2.1A5 5 0 0 1 4 9V6h4zm0 5H6v1a3 3 0 0 0 2.3 2.9A9 9 0 0 1 8 9zm8 0a9 9 0 0 1-.3 2.9A3 3 0 0 0 18 9V8z"/></svg>
+        <span>Bảng xếp hạng</span>
+      </button>
+      <button class="nav-item" type="button" data-nav="Bạn bè">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm7-1a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 19a6 6 0 0 1 12 0v2H2zm13 2v-2a7.9 7.9 0 0 0-1.1-4 5 5 0 0 1 8.1 4v2z"/></svg>
+        <span>Bạn bè</span>
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="online-count"><span class="live-dot"></span><span>Đang chờ dữ liệu trực tuyến</span></div>
+      <div class="sidebar-version">TIẾN LÊN ONLINE <span>v1.0.6</span></div>
+    </div>
+  </aside>
+
+  <div class="workspace">
+    <header class="topbar">
+      <div class="breadcrumb"><span></span><b></b>ĐỒ ÁN CHỈ PHỤC VỤ MÔN HỌC</div>
+      <div class="topbar-right">
+        <button class="icon-button notification-button" type="button" id="notificationButton" aria-label="Thông báo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12h4"/></svg><i></i>
+        </button>
+        <span class="topbar-divider"></span>
+        <button class="profile-button" type="button" id="profileButton">
+          <img id="headerAvatar" alt="" hidden>
+          <span id="headerName">Người chơi</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+        </button>
+        <div class="coin-balance"><span class="coin-icon">₵</span><strong>—</strong><small>xu</small></div>
+        <span class="topbar-divider"></span>
+        <button class="logout-button" id="logoutButton" type="button" title="Đăng xuất" aria-label="Đăng xuất">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17v-2h5V9h-5V7l-5 5zm8-14H6a2 2 0 0 0-2 2v4h2V5h12v14H6v-4H4v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2"/></svg>
+        </button>
+        <span class="topbar-divider window-divider"></span>
+        <div class="window-controls" aria-label="Điều khiển cửa sổ">
+          <button class="window-control" id="btnMinimize" type="button" title="Thu nhỏ" aria-label="Thu nhỏ">−</button>
+          <button class="window-control" id="btnMaximize" type="button" title="Phóng to" aria-label="Phóng to">□</button>
+          <button class="window-control close-control" id="btnClose" type="button" title="Đóng ứng dụng" aria-label="Đóng ứng dụng">×</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <section class="welcome-section">
+        <div class="welcome-copy">
+          <div class="eyebrow"><span></span> </div>
+          <h1>Chào <span id="welcomeName">Thoai</span>, vào bàn thôi!</h1>
+          <p>Tiến Lên Miền Nam <b>—</b> </p>
+        </div>
+        <div class="hero-spade" aria-hidden="true">♠</div>
+        <div class="stats-row">
+          <div class="stat-card">
+            <span class="stat-icon game-icon"><svg viewBox="0 0 24 24"><path d="M7 8h10a4 4 0 0 1 3.8 2.8l1 3.2a2.5 2.5 0 0 1-4.2 2.5L15 14h-6l-2.6 2.5a2.5 2.5 0 0 1-4.2-2.5l1-3.2A4 4 0 0 1 7 8zm0 2v2H5v2h2v2h2v-2h2v-2H9v-2zm9 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm2 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg></span>
+            <span class="stat-copy"><small>Số trận</small><strong>—</strong></span>
+            <span class="stat-trend">Chưa có dữ liệu</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon win-icon"><svg viewBox="0 0 24 24"><path d="M4 19h3V9H4zm6 0h3V5h-3zm6 0h3v-7h-3z"/></svg></span>
+            <span class="stat-copy"><small>Tỉ lệ thắng</small><strong>—</strong></span>
+            <span class="stat-trend">Chưa có dữ liệu</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-icon streak-icon"><svg viewBox="0 0 24 24"><path d="M13.5 2.5c.5 3.5-2 4.6-2 7.1 0 1.3.8 2.1 1.8 2.1 1.5 0 2.2-1.5 2-3.1 2.3 2.1 3.7 4.4 3.7 7.1a7 7 0 0 1-14 0c0-3.6 2.4-7.4 6.6-11.2-.1 2.7.6 3.8 1.9 3.7 1.2-.1 1.5-2 .0-5.7z"/></svg></span>
+            <span class="stat-copy"><small>Chuỗi thắng</small><strong>—</strong></span>
+            <span class="stat-trend">Chưa có dữ liệu</span>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="action-card create-action" type="button" data-action="Tạo phòng">
+            <span class="action-symbol">＋</span><span><strong>Tạo phòng</strong><small>Tạo bàn chơi theo ý bạn</small></span><b>↗</b>
+          </button>
+          <button class="action-card quick-action" type="button" data-action="Tham gia nhanh">
+            <span class="action-symbol lightning">ϟ</span><span><strong>Tham gia nhanh</strong><small>Vào bàn trống ngẫu nhiên</small></span><b>↗</b>
+          </button>
+          <button class="action-card rank-action" type="button" data-action="Bảng xếp hạng">
+            <span class="action-symbol trophy-symbol">♜</span><span><strong>Bảng xếp hạng</strong><small>Xem top cao thủ</small></span><b>↗</b>
+          </button>
+        </div>
+      </section>
+
+      <section class="rooms-section" aria-labelledby="roomsHeading">
+        <div class="section-heading">
+          <div><h2 id="roomsHeading">Danh sách phòng</h2><span class="room-subtitle">Tìm bàn phù hợp và nhập cuộc ngay</span></div>
+          <div class="room-filters" role="group" aria-label="Lọc phòng">
+              <button class="filter-chip selected" type="button" data-filter="all">Tất cả <span>—</span></button>
+              <button class="filter-chip" type="button" data-filter="open">Còn chỗ <span>—</span></button>
+              <button class="filter-chip" type="button" data-filter="playing">Đang chơi <span>—</span></button>
+              <button class="filter-chip" type="button" data-filter="full">Đã đầy <span>—</span></button>
+            </div>
+        </div>
+
+        <div class="room-grid" id="roomGrid"></div>
+        <div class="empty-state visible" id="emptyState">Cơ sở dữ liệu hiện chưa có bảng phòng chơi.</div>
+      </section>
+    </main>
+
+    <div class="feature-stage" id="featureStage" hidden>
+      <section class="feature-screen" data-screen="create-room" hidden>
+        <div class="feature-heading">
+          <button class="back-link" type="button" data-screen-back>← <span>Quay lại sảnh</span></button>
+          <span class="feature-kicker">THIẾT LẬP BÀN CHƠI</span>
+          <h1>Tạo <span>phòng mới</span></h1>
+          <p>Tùy chỉnh bàn chơi trước khi mời bạn bè nhập cuộc.</p>
+        </div>
+        <div class="create-room-layout">
+          <form class="settings-card" id="roomSettingsForm">
+            <label class="field-label" for="roomNameInput">Tên phòng</label>
+            <input class="lobby-input" id="roomNameInput" type="text" maxlength="32" placeholder="Ví dụ: Hội bạn thân" value="Bàn Tiến Lên">
+            <div class="field-row">
+              <label class="field-label" for="roomCapacity">Số người chơi</label>
+              <select class="lobby-input" id="roomCapacity"><option value="4">4 người</option></select>
+            </div>
+            <div class="field-row">
+              <label class="field-label" for="roomVisibility">Quyền riêng tư</label>
+              <select class="lobby-input" id="roomVisibility"><option value="private">Phòng riêng — cần mã mời</option><option value="public">Phòng công khai</option></select>
+            </div>
+            <div class="setting-note"><span>♧</span><p><strong>Luật Tiến Lên Miền Nam</strong><small>Chơi 4 người · 13 lá mỗi người · Chặt heo theo luật chuẩn</small></p></div>
+            <button class="primary-button" type="submit" disabled>Tạo phòng <span>→</span></button>
+            <p class="unavailable-note">Chưa thể tạo phòng: máy chủ chưa có API và bảng dữ liệu phòng.</p>
+          </form>
+          <aside class="preview-card">
+            <div class="preview-card-top"><span class="mini-live"></span> XEM TRƯỚC GIAO DIỆN</div>
+            <div class="preview-table">
+              <span class="preview-seat preview-seat-top">CHỜ NGƯỜI CHƠI</span>
+              <span class="preview-seat preview-seat-left">CHỜ NGƯỜI CHƠI</span>
+              <div class="preview-emblem">♠<small>TIẾN LÊN</small></div>
+              <span class="preview-seat preview-seat-right">CHỜ NGƯỜI CHƠI</span>
+              <span class="preview-seat preview-seat-bottom">BẠN</span>
+            </div>
+            <div class="preview-foot"><span>01</span> PHÒNG CHỈ ĐƯỢC LƯU KHI MÁY CHỦ SẴN SÀNG</div>
+            <button class="text-button" type="button" data-screen-target="waiting-room">Xem giao diện phòng chờ <span>→</span></button>
+          </aside>
+        </div>
+      </section>
+
+      <section class="feature-screen" data-screen="waiting-room" hidden>
+        <div class="feature-heading compact-heading">
+          <button class="back-link" type="button" data-screen-back>← <span>Quay lại sảnh</span></button>
+          <span class="feature-kicker">PHÒNG CHỜ · BẢN XEM TRƯỚC</span>
+          <h1>Sẵn sàng <span>nhập cuộc?</span></h1>
+          <p>Phòng chờ sẽ hiển thị người chơi thật sau khi kết nối máy chủ.</p>
+        </div>
+        <div class="waiting-room-board">
+          <div class="waiting-room-toolbar"><div><span class="room-status-pill"><i></i> CHƯA KẾT NỐI</span><h2 id="previewRoomName">Phòng Tiến Lên</h2></div><div class="room-code-box">MÃ PHÒNG <strong>— — — —</strong><button type="button" data-unavailable title="Sao chép mã phòng">▢</button></div></div>
+          <div class="waiting-seats">
+            <div class="waiting-seat host-seat"><div class="waiting-avatar" id="waitingAvatar">♙</div><strong id="waitingPlayerName">Bạn</strong><small>CHỦ PHÒNG · BẠN</small><span class="seat-check">✓</span></div>
+            <div class="waiting-seat"><div class="waiting-avatar">＋</div><strong>Đang chờ</strong><small>VỊ TRÍ 02</small></div>
+            <div class="waiting-seat"><div class="waiting-avatar">＋</div><strong>Đang chờ</strong><small>VỊ TRÍ 03</small></div>
+            <div class="waiting-seat"><div class="waiting-avatar">＋</div><strong>Đang chờ</strong><small>VỊ TRÍ 04</small></div>
+          </div>
+          <div class="waiting-footer"><span class="waiting-hint"><i></i> Phòng chưa được tạo trong cơ sở dữ liệu</span><button class="primary-button" type="button" disabled>Bắt đầu ván <span>→</span></button></div>
+          <div class="screen-actions"><button class="secondary-button" type="button" data-screen-target="table">Xem giao diện bàn chơi</button><button class="text-button" type="button" data-screen-back>Thoát phòng</button></div>
+        </div>
+      </section>
+
+      <section class="feature-screen table-screen" data-screen="table" hidden>
+        <div class="table-toolbar">
+          <button class="back-link" type="button" data-screen-back>← <span>Rời bàn</span></button>
+          <div class="table-title"><span class="feature-kicker">BÀN CHƠI · BẢN XEM TRƯỚC</span><strong>Tiến Lên Miền Nam</strong></div>
+          <div class="table-round">VÁN <strong>—</strong><span>CHỜ NGƯỜI CHƠI</span></div>
+          <button class="icon-button" type="button" data-unavailable aria-label="Cài đặt bàn">⚙</button>
+        </div>
+        <div class="game-table-wrap">
+          <div class="game-table">
+            <div class="table-felt">
+              <div class="table-seat table-seat-top"><span class="table-avatar">＋</span><strong>Chờ người chơi</strong><small>VỊ TRÍ 02</small></div>
+              <div class="table-seat table-seat-left"><span class="table-avatar">＋</span><strong>Chờ người chơi</strong><small>VỊ TRÍ 03</small></div>
+              <div class="table-center">
+                <span class="table-suit">♠</span>
+                <strong>ĐANG CHỜ KẾT NỐI</strong>
+                <small>Ván bài sẽ bắt đầu khi có phòng hoạt động</small>
+                <div class="deck-back"><span>♠</span><i>TIẾN LÊN</i></div>
+              </div>
+              <div class="table-seat table-seat-right"><span class="table-avatar">＋</span><strong>Chờ người chơi</strong><small>VỊ TRÍ 04</small></div>
+              <div class="table-seat table-seat-bottom"><span class="table-avatar" id="tableSelfAvatar">♙</span><strong id="tableSelfName">Bạn</strong><small>BẠN · VỊ TRÍ 01</small></div>
+            </div>
+          </div>
+        </div>
+        <div class="game-controls">
+          <div class="hand-caption"><strong>BÀI CỦA BẠN</strong><span>Chưa có ván đang diễn ra</span></div>
+          <div class="hand-placeholder"><span>♧</span> Bài sẽ được chia khi máy chủ bắt đầu ván chơi</div>
+          <div class="turn-actions"><button class="secondary-button" type="button" disabled>Bỏ lượt</button><button class="secondary-button" type="button" disabled>Sắp xếp bài</button><button class="primary-button" type="button" disabled>Đánh bài <span>→</span></button></div>
+        </div>
+        <div class="table-chat"><span class="chat-icon">◌</span><span>Trò chuyện trong bàn</span><input type="text" placeholder="Chat chưa khả dụng khi chưa có phòng..." disabled><button type="button" disabled>Gửi</button></div>
+      </section>
+
+      <section class="feature-screen ranking-screen" data-screen="leaderboard" hidden>
+        <div class="feature-heading">
+          <button class="back-link" type="button" data-screen-back>← <span>Quay lại sảnh</span></button>
+          <span class="feature-kicker">VINH DANH CAO THỦ</span>
+          <h1>Bảng <span>xếp hạng</span></h1>
+          <p>Thành tích được cập nhật từ các ván đấu đã lưu.</p>
+        </div>
+        <div class="ranking-toolbar">
+          <div class="ranking-period"><button class="period-button selected" type="button">Tuần này</button><button class="period-button" type="button">Tháng này</button><button class="period-button" type="button">Toàn thời gian</button></div>
+          <div class="ranking-season"><span class="season-dot"></span> MÙA GIẢI <strong>01</strong></div>
+        </div>
+        <div class="ranking-summary">
+          <div class="rank-podium podium-second"><span class="podium-medal">02</span><div class="podium-avatar">♙</div><strong>Chưa có dữ liệu</strong><small>— điểm</small><div class="podium-base">HẠNG 2</div></div>
+          <div class="rank-podium podium-first"><span class="podium-medal">01</span><div class="podium-avatar">♛</div><strong>ĐANG CHỜ CAO THỦ</strong><small>Chưa có bảng thành tích</small><div class="podium-base">HẠNG 1</div></div>
+          <div class="rank-podium podium-third"><span class="podium-medal">03</span><div class="podium-avatar">♙</div><strong>Chưa có dữ liệu</strong><small>— điểm</small><div class="podium-base">HẠNG 3</div></div>
+        </div>
+        <div class="ranking-table-card">
+          <div class="ranking-table-title"><div><strong>Top cao thủ</strong><small>Thành tích mùa giải</small></div><span>ĐIỂM XẾP HẠNG</span></div>
+          <div class="ranking-columns"><span>HẠNG</span><span>NGƯỜI CHƠI</span><span>SỐ TRẬN</span><span>TỈ LỆ THẮNG</span><span>ĐIỂM</span></div>
+          <div class="ranking-empty"><span class="ranking-empty-icon">♜</span><strong>Chưa có bảng xếp hạng</strong><p>Dữ liệu thành tích sẽ xuất hiện khi hệ thống lưu lịch sử trận đấu.</p></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <aside class="friends-panel">
+    <div class="friends-heading"><div><h2>Bạn bè trực tuyến</h2><span>Chưa có bảng dữ liệu bạn bè</span></div><button class="icon-button add-friend" id="addFriendButton" type="button" aria-label="Thêm bạn">＋</button></div>
+    <label class="friend-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="friendSearch" type="search" placeholder="Tìm bạn bè..." aria-label="Tìm bạn bè"><kbd>⌘ K</kbd></label>
+    <div class="friend-list online-list" id="onlineFriends"></div>
+    <div class="offline-heading">BẠN BÈ KHÁC</div>
+    <div class="friend-list offline-list">
+      <p class="friends-empty">Cơ sở dữ liệu hiện chưa có bảng bạn bè.</p>
+    </div>
+    <div class="friend-panel-footer">Trạng thái kết nối chưa khả dụng</div>
+  </aside>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>var exports = {};</script>
+  <script src="../../../../dist/client/views/lobby/lobby.js"></script>
+</body>
+</html>
