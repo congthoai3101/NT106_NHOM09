@@ -4,7 +4,6 @@
   "description": "Do an cuoi ki mon lap trinh mang NT106 - Nhom 9",
   "main": "dist/server.js",
   "scripts": {
-    "setup": "node -e \"const fs=require('fs');if(!fs.existsSync('.env')){fs.copyFileSync('.env.example','.env');console.log('✅ File .env đã được tạo từ .env.example. Hãy điền các giá trị thật vào file .env trước khi chạy.')}else{console.log('ℹ️  File .env đã tồn tại, bỏ qua.')}\"",
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "desktop": "tsc && electron dist/client/main/main.js",
