@@ -20,8 +20,6 @@
 - **Xác thực tài khoản:** Supabase Authentication.
 - **Cơ sở dữ liệu:** PostgreSQL trên Supabase.
 
-*Ngôn ngữ lập trình, framework và công nghệ voice chat sẽ được cập nhật sau khi nhóm thống nhất.*
-
 ## 4. Cấu trúc tài liệu
 
 ```text
