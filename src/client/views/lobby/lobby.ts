@@ -420,7 +420,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (button.dataset.nav === 'Bảng xếp hạng') {
         showScreen('leaderboard');
       } else if (button.dataset.nav === 'Sảnh chơi') {
-        showScreen();
+        if (currentRoom) {
+          showScreen(currentRoom.status === 'PLAYING' ? 'table' : 'waiting-room');
+        } else {
+          showScreen();
+        }
       } else {
         showToast('Cơ sở dữ liệu chưa có tính năng bạn bè.');
       }
@@ -432,7 +436,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.querySelectorAll<HTMLButtonElement>('[data-screen-back]').forEach((button) => {
-    button.addEventListener('click', () => showScreen());
+    button.addEventListener('click', () => {
+      const activeScreen = featureScreens.find((screen) => !screen.hidden)?.dataset.screen;
+      if (activeScreen === 'waiting-room' && currentRoom) {
+        void leaveRoom();
+      } else {
+        showScreen();
+      }
+    });
   });
 
   document.querySelectorAll<HTMLButtonElement>('[data-unavailable]').forEach((button) => {
@@ -534,19 +545,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   async function leaveRoom(): Promise<void> {
+    let leftRoom = false;
     try {
       await window.electronAuth!.leaveGameRoom();
+      leftRoom = true;
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Không thể rời phòng.');
-    } finally {
-      currentRoom = null;
-      myCards = [];
-      selectedCards.clear();
-      playerCardCounts = {};
-      currentTurnPlayerId = '';
-      localStorage.removeItem('currentRoomCode');
-      showScreen();
     }
+    if (!leftRoom) return;
+    currentRoom = null;
+    myCards = [];
+    selectedCards.clear();
+    playerCardCounts = {};
+    currentTurnPlayerId = '';
+    localStorage.removeItem('currentRoomCode');
+    showScreen();
   }
 
   document.getElementById('leaveWaitingRoomButton')?.addEventListener('click', () => void leaveRoom());
