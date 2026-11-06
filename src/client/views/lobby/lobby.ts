@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const filters = Array.from(document.querySelectorAll<HTMLButtonElement>('.filter-chip'));
   const featureStage = document.getElementById('featureStage') as HTMLDivElement;
   const mainContent = document.querySelector<HTMLElement>('.main-content')!;
+  const roomCapacity = document.getElementById('roomCapacity') as HTMLSelectElement;
+  const roomModeDescription = document.getElementById('roomModeDescription') as HTMLElement;
+  const waitingSeats = document.querySelector<HTMLElement>('.waiting-seats');
   const featureScreens = Array.from(document.querySelectorAll<HTMLElement>('[data-screen]'));
   let activeFilter = 'all';
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -43,6 +46,18 @@ document.addEventListener('DOMContentLoaded', () => {
       item.classList.toggle('active', item.dataset.nav === activeNav);
     });
   }
+
+  function updateRoomModePreview(): void {
+    const capacity = Number(roomCapacity.value);
+    roomModeDescription.textContent = `Đấu ${capacity} người · 13 lá mỗi người · Chặt heo theo luật chuẩn`;
+    document.querySelectorAll<HTMLElement>('[data-room-seat]').forEach((seat) => {
+      seat.hidden = Number(seat.dataset.roomSeat) > capacity;
+    });
+    waitingSeats?.classList.toggle('duel-mode', capacity === 2);
+  }
+
+  roomCapacity.addEventListener('change', updateRoomModePreview);
+  updateRoomModePreview();
 
   function setPlayerName(name: string, avatarUrl: string | null): void {
     const firstName = name.trim().split(/\s+/).pop() || name;
