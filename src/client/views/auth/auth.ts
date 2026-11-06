@@ -11,13 +11,20 @@ interface ElectronWindowAPI {
   isMaximized: () => Promise<boolean>;
 }
 
+interface ElectronAuthState {
+  user: { id: string; email?: string; user_metadata?: { username?: string; avatar_url?: string } } | null;
+  profile: { id: string; username: string; avatarUrl: string | null } | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
 interface ElectronAuthAPI {
   login: (input: any) => Promise<any>;
   register: (input: any) => Promise<any>;
   forgotPassword: (input: any) => Promise<any>;
   logout: () => Promise<any>;
-  getState: () => any;
-  subscribe: (callback: (state: any) => void) => () => void;
+  getState: () => ElectronAuthState;
+  subscribe: (callback: (state: ElectronAuthState) => void) => () => void;
 }
 
 declare global {
@@ -286,14 +293,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (res.success) {
-          showToast('success', `Chào mừng ${res.profile?.username || 'bạn'} đã vào sòng!`);
-          document.body.style.transition = 'opacity 0.5s ease';
-          document.body.style.opacity = '0.7';
+          const state = window.electronAuth.getState();
+          if (state.isAuthenticated && state.profile?.id === state.user?.id) {
+            window.location.replace('../lobby/lobby.html');
+          } else if (!state.isLoading) {
+            triggerCardShake('Tài khoản chưa có hồ sơ hợp lệ trong cơ sở dữ liệu.');
+          } else {
+            showToast('info', 'Đã xác thực. Đang tải hồ sơ người chơi...');
+          }
         } else {
           triggerCardShake(res.error || 'Tài khoản hoặc mật khẩu không chính xác.');
         }
       } else {
-        showToast('success', 'Vào sòng thành công!');
+        triggerCardShake('Không thể xác thực tài khoản. Vui lòng khởi động lại ứng dụng.');
       }
     } catch (err: any) {
       triggerCardShake(err.message || 'Lỗi đăng nhập vào sòng.');
@@ -305,10 +317,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 10. Tự động kiểm tra trạng thái phiên cũ khi vừa mở
   if (window.electronAuth) {
-    const curState = window.electronAuth.getState();
-    if (curState?.isAuthenticated && curState.user) {
-      showToast('success', `Đã nhận diện: ${curState.profile?.username || curState.user.email}`);
-    }
+    window.electronAuth.subscribe((state) => {
+      if (state.isAuthenticated && state.user && state.profile?.id === state.user.id) {
+        window.location.replace('../lobby/lobby.html');
+      } else if (state.isAuthenticated && state.user && !state.isLoading && !state.profile) {
+        showToast('error', 'Không tìm thấy hồ sơ người chơi trong cơ sở dữ liệu.');
+      }
+    });
   }
 });
 

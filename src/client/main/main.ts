@@ -14,7 +14,7 @@ function createWindow(): void {
     minWidth: 1024,
     minHeight: 600,
     frame: false, // Bật chế độ Custom Frameless Window (không dùng viền OS)
-    backgroundColor: '#080C14',
+    backgroundColor: '#06120E',
     title: 'Tiến Lên Miền Nam - UIT NT106',
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.js'),

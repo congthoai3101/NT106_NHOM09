@@ -165,6 +165,11 @@ app.post('/api/auth/register', async (req: Request, res: Response): Promise<void
 
     if (profileError) {
       console.warn('[Warning]: Lỗi lưu profile người chơi:', profileError.message);
+      res.status(500).json({
+        success: false,
+        message: 'Tài khoản đã được tạo nhưng không thể lưu hồ sơ người chơi.'
+      });
+      return;
     }
 
     res.status(201).json({
@@ -219,11 +224,19 @@ app.post('/api/auth/login', async (req: Request, res: Response): Promise<void> =
     }
 
     // Bước 2: Truy vấn thông tin profile người chơi từ PostgreSQL
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, username, avatar_url')
       .eq('id', data.user.id)
       .single();
+
+    if (profileError || !profile) {
+      res.status(403).json({
+        success: false,
+        message: 'Tài khoản chưa có hồ sơ người chơi hợp lệ trong cơ sở dữ liệu.'
+      });
+      return;
+    }
 
     // Bước 3: Trả về JWT Access Token và thông tin cơ bản cho Client
     res.status(200).json({
@@ -237,8 +250,8 @@ app.post('/api/auth/login', async (req: Request, res: Response): Promise<void> =
         user: {
           id: data.user.id,
           email: data.user.email,
-          username: profile?.username || data.user.user_metadata?.display_name || 'Người chơi',
-          avatarUrl: profile?.avatar_url || data.user.user_metadata?.avatar_url || 'avatar_chibi_boy'
+          username: profile.username,
+          avatarUrl: profile.avatar_url
         }
       }
     });
@@ -346,4 +359,3 @@ app.listen(PORT, () => {
   console.log(`🛡️ [PROFILE ME]   : GET  http://localhost:${PORT}/api/profile/me`);
   console.log(`====================================================`);
 });
-
