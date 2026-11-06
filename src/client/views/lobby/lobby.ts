@@ -1,3 +1,5 @@
+import { RoomService } from '../../services/roomService';
+
 document.addEventListener('DOMContentLoaded', () => {
   const toast = document.getElementById('toast') as HTMLDivElement;
   const friendSearch = document.getElementById('friendSearch') as HTMLInputElement;
@@ -177,9 +179,34 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', () => showToast('Thao tác sẽ khả dụng khi có dữ liệu phòng trên máy chủ.'));
   });
 
-  document.getElementById('roomSettingsForm')?.addEventListener('submit', (event) => {
+  const roomSettingsForm = document.getElementById('roomSettingsForm') as HTMLFormElement;
+  roomSettingsForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    showToast('Chưa thể tạo phòng: máy chủ chưa có API và bảng dữ liệu phòng.');
+    const submitButton = roomSettingsForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const nameInput = document.getElementById('roomNameInput') as HTMLInputElement;
+    const roomName = nameInput.value.trim();
+    const maxPlayers = Number(roomCapacity.value);
+
+    if (!roomName) {
+      nameInput.focus();
+      showToast('Vui lòng nhập tên phòng.');
+      return;
+    }
+
+    if (submitButton) submitButton.disabled = true;
+    try {
+      const room = await RoomService.createRoom(roomName, maxPlayers);
+      document.getElementById('previewRoomName')!.textContent = room.name;
+      document.getElementById('roomCodeText')!.textContent = room.roomCode;
+      document.getElementById('roomStatusText')!.textContent = 'ĐANG CHỜ';
+      document.getElementById('roomWaitingHint')!.textContent = `Đang chờ người chơi · Tối đa ${room.maxPlayers} người`;
+      showScreen('waiting-room');
+      showToast(`Đã tạo phòng ${room.roomCode}.`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể tạo phòng. Vui lòng thử lại.');
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
   });
 
   document.querySelectorAll<HTMLButtonElement>('.period-button').forEach((button) => {
