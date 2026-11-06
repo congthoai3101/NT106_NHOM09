@@ -26,6 +26,7 @@ class AuthStore {
 
   private listeners: StateListener[] = [];
   private authSubscription: Subscription | null = null;
+  private sessionRevision = 0;
 
   constructor() {
     this.init();
@@ -36,30 +37,29 @@ class AuthStore {
    */
   private async init(): Promise<void> {
     try {
-      // 1. Phục hồi phiên đăng nhập đã lưu trong máy tính (Auto-login khi mở app)
-      const { data, error } = await supabase.auth.getSession();
-      if (!error && data?.session) {
-        await this.handleSessionUpdate(data.session);
-      } else {
-        this.updateState({
-          user: null,
-          session: null,
-          profile: null,
-          isAuthenticated: false,
-          isLoading: false
-        });
-      }
-
-      // 2. Lắng nghe trực tiếp các sự kiện từ Supabase Auth Server:
-      // SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, USER_UPDATED, PASSWORD_RECOVERY
+      // Do not call Supabase APIs inside onAuthStateChange; that can deadlock its auth lock.
       const { data: authListener } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
+        (event, session) => {
           console.log(`[Supabase Auth Event]: ${event}`);
-          await this.handleSessionUpdate(session);
+          const revision = ++this.sessionRevision;
+          setTimeout(() => {
+            void this.handleSessionUpdate(session, revision).catch((err) => {
+              console.error('[AuthStore Session Update Error]:', err);
+              if (revision === this.sessionRevision) this.updateState({ isLoading: false });
+            });
+          }, 0);
         }
       );
 
       this.authSubscription = authListener.subscription;
+
+      // Restore the persisted session after the listener is registered so auth changes
+      // during restoration cannot leave the store with stale user data.
+      const revision = this.sessionRevision;
+      const { data, error } = await supabase.auth.getSession();
+      if (revision !== this.sessionRevision) return;
+      if (error) console.warn('[AuthStore Session Restore Warning]:', error.message);
+      await this.handleSessionUpdate(data?.session ?? null, revision);
     } catch (err) {
       console.warn('[AuthStore Init Error]:', err);
       this.updateState({ isLoading: false });
@@ -69,10 +69,10 @@ class AuthStore {
   /**
    * Cập nhật trạng thái người dùng và nạp hồ sơ từ CSDL
    */
-  private async handleSessionUpdate(session: Session | null): Promise<void> {
+  private async handleSessionUpdate(session: Session | null, revision: number): Promise<void> {
     if (session?.user) {
-      // Đã có phiên đăng nhập hợp lệ
-      const profile = await AuthService.fetchProfile(session.user.id);
+      const profile = await AuthService.fetchProfile(session.user.id, session.access_token);
+      if (revision !== this.sessionRevision) return;
 
       this.updateState({
         user: session.user,
@@ -82,7 +82,7 @@ class AuthStore {
         isLoading: false
       });
     } else {
-      // Chưa đăng nhập hoặc vừa đăng xuất
+      if (revision !== this.sessionRevision) return;
       this.updateState({
         user: null,
         session: null,
@@ -218,4 +218,3 @@ class AuthStore {
  * Xuất Singleton instance của AuthStore
  */
 export const authStore = new AuthStore();
-

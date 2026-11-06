@@ -1,5 +1,3 @@
-import { RoomService } from '../../services/roomService';
-
 document.addEventListener('DOMContentLoaded', () => {
   const toast = document.getElementById('toast') as HTMLDivElement;
   const friendSearch = document.getElementById('friendSearch') as HTMLInputElement;
@@ -195,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (submitButton) submitButton.disabled = true;
     try {
-      const room = await RoomService.createRoom(roomName, maxPlayers);
+      const room = await window.electronAuth!.createRoom(roomName, maxPlayers);
       document.getElementById('previewRoomName')!.textContent = room.name;
       document.getElementById('roomCodeText')!.textContent = room.roomCode;
       document.getElementById('roomStatusText')!.textContent = 'ĐANG CHỜ';

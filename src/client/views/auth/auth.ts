@@ -23,6 +23,12 @@ interface ElectronAuthAPI {
   register: (input: any) => Promise<any>;
   forgotPassword: (input: any) => Promise<any>;
   logout: () => Promise<any>;
+  createRoom: (name: string, maxPlayers: number) => Promise<{
+    id: string;
+    roomCode: string;
+    name: string;
+    maxPlayers: number;
+  }>;
   getState: () => ElectronAuthState;
   subscribe: (callback: (state: ElectronAuthState) => void) => () => void;
 }
