@@ -3,6 +3,7 @@ import cors from 'cors';
 import * as dotenv from 'dotenv';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { randomBytes, randomUUID } from 'node:crypto';
+import { startTcpGameServer } from './game/tcpGameServer';
 
 // ============================================================================
 // 1. CẤU HÌNH BIẾN MÔI TRƯỜNG & KHỞI TẠO BACKEND SUPABASE CLIENT
@@ -412,3 +413,5 @@ app.listen(PORT, () => {
   console.log(`🏠 [CREATE ROOM]  : POST http://localhost:${PORT}/api/rooms`);
   console.log(`====================================================`);
 });
+
+startTcpGameServer();
