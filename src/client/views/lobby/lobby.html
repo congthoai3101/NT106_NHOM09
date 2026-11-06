@@ -115,6 +115,11 @@
             </div>
         </div>
 
+        <form class="join-room-form" id="joinRoomForm">
+          <label for="joinRoomCodeInput">Đã có mã phòng?</label>
+          <input class="lobby-input" id="joinRoomCodeInput" type="text" maxlength="10" placeholder="Nhập mã phòng" required>
+          <button class="secondary-button" type="submit">Tham gia phòng</button>
+        </form>
         <div class="room-grid" id="roomGrid"></div>
         <div class="empty-state visible" id="emptyState">Cơ sở dữ liệu hiện chưa có bảng phòng chơi.</div>
       </section>
@@ -166,21 +171,16 @@
           <p>Phòng chờ sẽ hiển thị người chơi thật sau khi kết nối máy chủ.</p>
         </div>
         <div class="waiting-room-board">
-          <div class="waiting-room-toolbar"><div><span class="room-status-pill"><i></i><span id="roomStatusText">CHƯA KẾT NỐI</span></span><h2 id="previewRoomName">Phòng Tiến Lên</h2></div><div class="room-code-box">MÃ PHÒNG <strong id="roomCodeText">— — — —</strong><button type="button" data-unavailable title="Sao chép mã phòng">▢</button></div></div>
-          <div class="waiting-seats">
-            <div class="waiting-seat host-seat"><div class="waiting-avatar" id="waitingAvatar">♙</div><strong id="waitingPlayerName">Bạn</strong><small>CHỦ PHÒNG · BẠN</small><span class="seat-check">✓</span></div>
-            <div class="waiting-seat"><div class="waiting-avatar">＋</div><strong>Đang chờ</strong><small>VỊ TRÍ 02</small></div>
-            <div class="waiting-seat" data-room-seat="3"><div class="waiting-avatar">＋</div><strong>Đang chờ</strong><small>VỊ TRÍ 03</small></div>
-            <div class="waiting-seat" data-room-seat="4"><div class="waiting-avatar">＋</div><strong>Đang chờ</strong><small>VỊ TRÍ 04</small></div>
-          </div>
-          <div class="waiting-footer"><span class="waiting-hint"><i></i><span id="roomWaitingHint">Đang chờ người chơi tham gia</span></span><button class="primary-button" type="button" disabled>Bắt đầu ván <span>→</span></button></div>
-          <div class="screen-actions"><button class="secondary-button" type="button" data-screen-target="table">Xem giao diện bàn chơi</button><button class="text-button" type="button" data-screen-back>Thoát phòng</button></div>
+          <div class="waiting-room-toolbar"><div><span class="room-status-pill"><i></i><span id="roomStatusText">CHƯA KẾT NỐI</span></span><h2 id="previewRoomName">Phòng Tiến Lên</h2></div><div class="room-code-box">MÃ PHÒNG <strong id="roomCodeText">— — — —</strong><button type="button" id="copyRoomCodeButton" title="Sao chép mã phòng">▢</button></div></div>
+          <div class="waiting-seats" id="waitingSeats"></div>
+          <div class="waiting-footer"><span class="waiting-hint"><i></i><span id="roomWaitingHint">Đang chờ người chơi tham gia</span></span><div class="room-actions"><button class="secondary-button" id="readyButton" type="button">Sẵn sàng</button><button class="primary-button" id="startGameButton" type="button" hidden>Bắt đầu ván <span>→</span></button></div></div>
+          <div class="screen-actions"><button class="secondary-button" type="button" data-screen-target="table">Xem giao diện bàn chơi</button><button class="text-button" id="leaveWaitingRoomButton" type="button">Thoát phòng</button></div>
         </div>
       </section>
 
       <section class="feature-screen table-screen" data-screen="table" hidden>
         <div class="table-toolbar">
-          <button class="back-link" type="button" data-screen-back>← <span>Rời bàn</span></button>
+          <button class="back-link" id="leaveTableButton" type="button">← <span>Rời bàn</span></button>
           <div class="table-title"><span class="feature-kicker">BÀN CHƠI · BẢN XEM TRƯỚC</span><strong>Tiến Lên Miền Nam</strong></div>
           <div class="table-round">VÁN <strong>—</strong><span>CHỜ NGƯỜI CHƠI</span></div>
           <button class="icon-button" type="button" data-unavailable aria-label="Cài đặt bàn">⚙</button>
@@ -192,8 +192,8 @@
               <div class="table-seat table-seat-left" data-room-seat="3"><span class="table-avatar">＋</span><strong>Chờ người chơi</strong><small>VỊ TRÍ 03</small></div>
               <div class="table-center">
                 <span class="table-suit">♠</span>
-                <strong>ĐANG CHỜ KẾT NỐI</strong>
-                <small>Ván bài sẽ bắt đầu khi có phòng hoạt động</small>
+                <strong id="gameStatusText">ĐANG CHỜ KẾT NỐI</strong>
+                <small id="gameTableCards">Ván bài sẽ bắt đầu khi có phòng hoạt động</small>
                 <div class="deck-back"><span>♠</span><i>TIẾN LÊN</i></div>
               </div>
               <div class="table-seat table-seat-right" data-room-seat="4"><span class="table-avatar">＋</span><strong>Chờ người chơi</strong><small>VỊ TRÍ 04</small></div>
@@ -202,9 +202,10 @@
           </div>
         </div>
         <div class="game-controls">
-          <div class="hand-caption"><strong>BÀI CỦA BẠN</strong><span>Chưa có ván đang diễn ra</span></div>
-          <div class="hand-placeholder"><span>♧</span> Bài sẽ được chia khi máy chủ bắt đầu ván chơi</div>
-          <div class="turn-actions"><button class="secondary-button" type="button" disabled>Bỏ lượt</button><button class="secondary-button" type="button" disabled>Sắp xếp bài</button><button class="primary-button" type="button" disabled>Đánh bài <span>→</span></button></div>
+        <div class="hand-caption"><strong>BÀI CỦA BẠN</strong><span id="handStatus">Chưa có ván đang diễn ra</span></div>
+        <div class="hand-placeholder" id="handPlaceholder"><span>♧</span> Bài sẽ được chia khi máy chủ bắt đầu ván chơi</div>
+        <div class="hand-cards" id="handCards" hidden></div>
+        <div class="turn-actions"><button class="secondary-button" id="passTurnButton" type="button" disabled>Bỏ lượt</button><button class="primary-button" id="playCardsButton" type="button" disabled>Đánh bài <span>→</span></button></div>
         </div>
         <div class="table-chat"><span class="chat-icon">◌</span><span>Trò chuyện trong bàn</span><input type="text" placeholder="Chat chưa khả dụng khi chưa có phòng..." disabled><button type="button" disabled>Gửi</button></div>
       </section>
