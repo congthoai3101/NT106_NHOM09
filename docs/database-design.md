@@ -52,6 +52,8 @@ Lưu thông tin các phòng chơi.
 | `status`      | VARCHAR(20)          | Trạng thái phòng: chờ, đang chơi hoặc kết thúc. |
 | `created_at`  | TIMESTAMPTZ          | Thời điểm tạo phòng.                            |
 
+API tạo phòng sử dụng `mode = '2p'` hoặc `'4p'`, `status = 'waiting'` và sinh `room_code` gồm 8 ký tự. Chủ phòng cũng được thêm vào `room_players` với `is_ready = true`. Schema hiện tại chưa có cột lưu tên phòng hoặc quyền riêng tư; các lựa chọn này chỉ dùng ở giao diện cho đến khi bổ sung cột tương ứng.
+
 ### 3.3. Bảng `room_players`
 
 Lưu thông tin người chơi tham gia từng phòng.

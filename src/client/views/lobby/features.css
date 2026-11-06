@@ -68,6 +68,7 @@
 .room-code-box strong { color: var(--gold); font-size: 13px; letter-spacing: 2px; }
 .room-code-box button { width: 28px; height: 28px; border: 1px solid var(--line-strong); border-radius: 6px; background: rgba(4, 18, 11, .65); color: #a9bcad; cursor: pointer; }
 .waiting-seats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; padding: 36px 0; }
+.waiting-seats.duel-mode { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 420px; margin-right: auto; margin-left: auto; }
 .waiting-seat { position: relative; display: flex; flex-direction: column; align-items: center; min-height: 152px; padding: 18px 7px 12px; border: 1px dashed rgba(125, 255, 192, .17); border-radius: 10px; background: rgba(5, 20, 12, .55); }
 .waiting-seat.host-seat { border-style: solid; border-color: rgba(57, 255, 136, .34); background: linear-gradient(150deg, rgba(13, 69, 41, .38), rgba(6, 24, 15, .7)); }
 .waiting-avatar { display: grid; place-items: center; width: 58px; height: 58px; border: 1px dashed rgba(125, 255, 192, .3); border-radius: 50%; color: #80ae91; font-size: 28px; }

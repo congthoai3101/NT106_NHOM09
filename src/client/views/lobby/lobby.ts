@@ -1,3 +1,5 @@
+import { RoomService } from '../../services/roomService';
+
 document.addEventListener('DOMContentLoaded', () => {
   const toast = document.getElementById('toast') as HTMLDivElement;
   const friendSearch = document.getElementById('friendSearch') as HTMLInputElement;
@@ -5,6 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const filters = Array.from(document.querySelectorAll<HTMLButtonElement>('.filter-chip'));
   const featureStage = document.getElementById('featureStage') as HTMLDivElement;
   const mainContent = document.querySelector<HTMLElement>('.main-content')!;
+  const roomCapacity = document.getElementById('roomCapacity') as HTMLSelectElement;
+  const roomModeDescription = document.getElementById('roomModeDescription') as HTMLElement;
+  const waitingSeats = document.querySelector<HTMLElement>('.waiting-seats');
   const featureScreens = Array.from(document.querySelectorAll<HTMLElement>('[data-screen]'));
   let activeFilter = 'all';
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -43,6 +48,18 @@ document.addEventListener('DOMContentLoaded', () => {
       item.classList.toggle('active', item.dataset.nav === activeNav);
     });
   }
+
+  function updateRoomModePreview(): void {
+    const capacity = Number(roomCapacity.value);
+    roomModeDescription.textContent = `Đấu ${capacity} người · 13 lá mỗi người · Chặt heo theo luật chuẩn`;
+    document.querySelectorAll<HTMLElement>('[data-room-seat]').forEach((seat) => {
+      seat.hidden = Number(seat.dataset.roomSeat) > capacity;
+    });
+    waitingSeats?.classList.toggle('duel-mode', capacity === 2);
+  }
+
+  roomCapacity.addEventListener('change', updateRoomModePreview);
+  updateRoomModePreview();
 
   function setPlayerName(name: string, avatarUrl: string | null): void {
     const firstName = name.trim().split(/\s+/).pop() || name;
@@ -162,9 +179,34 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', () => showToast('Thao tác sẽ khả dụng khi có dữ liệu phòng trên máy chủ.'));
   });
 
-  document.getElementById('roomSettingsForm')?.addEventListener('submit', (event) => {
+  const roomSettingsForm = document.getElementById('roomSettingsForm') as HTMLFormElement;
+  roomSettingsForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    showToast('Chưa thể tạo phòng: máy chủ chưa có API và bảng dữ liệu phòng.');
+    const submitButton = roomSettingsForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const nameInput = document.getElementById('roomNameInput') as HTMLInputElement;
+    const roomName = nameInput.value.trim();
+    const maxPlayers = Number(roomCapacity.value);
+
+    if (!roomName) {
+      nameInput.focus();
+      showToast('Vui lòng nhập tên phòng.');
+      return;
+    }
+
+    if (submitButton) submitButton.disabled = true;
+    try {
+      const room = await RoomService.createRoom(roomName, maxPlayers);
+      document.getElementById('previewRoomName')!.textContent = room.name;
+      document.getElementById('roomCodeText')!.textContent = room.roomCode;
+      document.getElementById('roomStatusText')!.textContent = 'ĐANG CHỜ';
+      document.getElementById('roomWaitingHint')!.textContent = `Đang chờ người chơi · Tối đa ${room.maxPlayers} người`;
+      showScreen('waiting-room');
+      showToast(`Đã tạo phòng ${room.roomCode}.`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể tạo phòng. Vui lòng thử lại.');
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
   });
 
   document.querySelectorAll<HTMLButtonElement>('.period-button').forEach((button) => {
