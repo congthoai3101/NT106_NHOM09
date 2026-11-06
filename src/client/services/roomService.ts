@@ -1,7 +1,7 @@
 import { supabase } from '../config/supabaseClient';
 
 const API_PORT = process.env.PORT || 5000;
-const API_BASE_URL = `http://localhost:${API_PORT}/api`;
+const API_BASE_URL = process.env.API_BASE_URL || `http://localhost:${API_PORT}/api`;
 
 export interface CreatedRoom {
   id: string;
