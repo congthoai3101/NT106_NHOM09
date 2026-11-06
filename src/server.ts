@@ -296,6 +296,44 @@ app.get('/api/profile/me', verifyJwtToken, async (req: AuthenticatedRequest, res
   }
 });
 
+app.post('/api/auth/forgot-password', async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { email } = req.body;
+        if (!email ) {
+            res.status(400).json({
+                success: false,
+                message: 'Vui lòng nhập email'
+            })
+        }
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: 'http://example.com/account/reset-password'
+        });
+
+        if (error) {
+            res.status(200).json({
+                success: false,
+                message: error.message
+            });
+            return;
+        }
+        res.status(200).json({
+            success: true,
+            message: 'Đã gửi link reset password tới email'
+        });
+    } catch(err: any) {
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi hệ thống',
+            error: err
+        })
+    }
+})
+
+app.post('/api/auth/reset-password', async (req: Request, res: Response): Promise<void> => {
+    
+})
+
+
 // ============================================================================
 // 5. KHỞI CHẠY HTTP SERVER VÀ LẮNG NGHE PORT
 // ============================================================================

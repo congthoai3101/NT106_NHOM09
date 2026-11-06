@@ -109,15 +109,24 @@ export class AuthService {
    */
   static async forgotPassword(email: string): Promise<AuthResponse> {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email
+        })
+      });
 
-      if (error) {
-        throw new Error(this.formatErrorMessage(error.message));
+      const resJson = await response.json();
+      if (!response.ok || !resJson.success) {
+        throw new Error(this.formatErrorMessage(resJson.message || 'Không nhận đươc email reset password'));
       }
 
       return {
         success: true,
-        message: 'Đã gửi hướng dẫn khôi phục mật khẩu vào hòm thư của bạn!'
+        message: resJson.message || 'Đã gửi  hướng dân khôi phuc mật khẩu vào hòm thư của bạn'
       };
     } catch (err: any) {
       return {
