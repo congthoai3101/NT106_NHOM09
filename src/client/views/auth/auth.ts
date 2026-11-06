@@ -13,6 +13,7 @@ interface ElectronWindowAPI {
 
 interface ElectronAuthState {
   user: { id: string; email?: string; user_metadata?: { username?: string; avatar_url?: string } } | null;
+  session: { access_token: string } | null;
   profile: { id: string; username: string; avatarUrl: string | null } | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -29,6 +30,14 @@ interface ElectronAuthAPI {
     name: string;
     maxPlayers: number;
   }>;
+  joinGameRoom: (roomCode: string) => Promise<{ success: boolean; room?: Record<string, unknown> }>;
+  updateGameToken: (accessToken: string) => Promise<void>;
+  setGameReady: (isReady: boolean) => Promise<Record<string, unknown>>;
+  startGame: () => Promise<Record<string, unknown>>;
+  playCards: (cards: number[]) => Promise<Record<string, unknown>>;
+  passTurn: () => Promise<Record<string, unknown>>;
+  leaveGameRoom: () => Promise<void>;
+  onGameEvent: (callback: (event: { opcode: number; payload: Record<string, unknown> }) => void) => () => void;
   getState: () => ElectronAuthState;
   subscribe: (callback: (state: ElectronAuthState) => void) => () => void;
 }
