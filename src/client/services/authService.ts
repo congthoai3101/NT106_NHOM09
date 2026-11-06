@@ -8,7 +8,7 @@ import {
 
 // Cổng Web API Gateway (Lấy từ .env hoặc mặc định 5000 / 20000)
 const API_PORT = process.env.PORT || 5000;
-const API_BASE_URL = `http://localhost:${API_PORT}/api`;
+const API_BASE_URL = process.env.API_BASE_URL || `http://localhost:${API_PORT}/api`;
 
 async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
   const controller = new AbortController();
