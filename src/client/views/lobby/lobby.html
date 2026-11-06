@@ -131,7 +131,7 @@
         <div class="create-room-layout">
           <form class="settings-card" id="roomSettingsForm">
             <label class="field-label" for="roomNameInput">Tên phòng</label>
-            <input class="lobby-input" id="roomNameInput" type="text" maxlength="32" placeholder="Ví dụ: Hội bạn thân" value="Bàn Tiến Lên">
+            <input class="lobby-input" id="roomNameInput" type="text" maxlength="32" placeholder="Ví dụ: Hội bạn thân" value="Bàn Tiến Lên" required>
             <div class="field-row">
               <label class="field-label" for="roomCapacity">Số người chơi</label>
               <select class="lobby-input" id="roomCapacity"><option value="2">Đấu 2 người</option><option value="4" selected>Đấu 4 người</option></select>
@@ -141,8 +141,7 @@
               <select class="lobby-input" id="roomVisibility"><option value="private">Phòng riêng — cần mã mời</option><option value="public">Phòng công khai</option></select>
             </div>
             <div class="setting-note"><span>♧</span><p><strong>Luật Tiến Lên Miền Nam</strong><small id="roomModeDescription">Đấu 4 người · 13 lá mỗi người · Chặt heo theo luật chuẩn</small></p></div>
-            <button class="primary-button" type="submit" disabled>Tạo phòng <span>→</span></button>
-            <p class="unavailable-note">Chưa thể tạo phòng: máy chủ chưa có API và bảng dữ liệu phòng.</p>
+            <button class="primary-button" type="submit">Tạo phòng <span>→</span></button>
           </form>
           <aside class="preview-card">
             <div class="preview-card-top"><span class="mini-live"></span> XEM TRƯỚC GIAO DIỆN</div>
@@ -167,14 +166,14 @@
           <p>Phòng chờ sẽ hiển thị người chơi thật sau khi kết nối máy chủ.</p>
         </div>
         <div class="waiting-room-board">
-          <div class="waiting-room-toolbar"><div><span class="room-status-pill"><i></i> CHƯA KẾT NỐI</span><h2 id="previewRoomName">Phòng Tiến Lên</h2></div><div class="room-code-box">MÃ PHÒNG <strong>— — — —</strong><button type="button" data-unavailable title="Sao chép mã phòng">▢</button></div></div>
+          <div class="waiting-room-toolbar"><div><span class="room-status-pill"><i></i><span id="roomStatusText">CHƯA KẾT NỐI</span></span><h2 id="previewRoomName">Phòng Tiến Lên</h2></div><div class="room-code-box">MÃ PHÒNG <strong id="roomCodeText">— — — —</strong><button type="button" data-unavailable title="Sao chép mã phòng">▢</button></div></div>
           <div class="waiting-seats">
             <div class="waiting-seat host-seat"><div class="waiting-avatar" id="waitingAvatar">♙</div><strong id="waitingPlayerName">Bạn</strong><small>CHỦ PHÒNG · BẠN</small><span class="seat-check">✓</span></div>
             <div class="waiting-seat"><div class="waiting-avatar">＋</div><strong>Đang chờ</strong><small>VỊ TRÍ 02</small></div>
             <div class="waiting-seat" data-room-seat="3"><div class="waiting-avatar">＋</div><strong>Đang chờ</strong><small>VỊ TRÍ 03</small></div>
             <div class="waiting-seat" data-room-seat="4"><div class="waiting-avatar">＋</div><strong>Đang chờ</strong><small>VỊ TRÍ 04</small></div>
           </div>
-          <div class="waiting-footer"><span class="waiting-hint"><i></i> Phòng chưa được tạo trong cơ sở dữ liệu</span><button class="primary-button" type="button" disabled>Bắt đầu ván <span>→</span></button></div>
+          <div class="waiting-footer"><span class="waiting-hint"><i></i><span id="roomWaitingHint">Đang chờ người chơi tham gia</span></span><button class="primary-button" type="button" disabled>Bắt đầu ván <span>→</span></button></div>
           <div class="screen-actions"><button class="secondary-button" type="button" data-screen-target="table">Xem giao diện bàn chơi</button><button class="text-button" type="button" data-screen-back>Thoát phòng</button></div>
         </div>
       </section>
