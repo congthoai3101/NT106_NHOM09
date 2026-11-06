@@ -78,6 +78,10 @@
 .waiting-seat small { margin-top: 5px; color: #758b7c; font-size: 7px; letter-spacing: .8px; }
 .seat-check { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--neon); color: #062316; font-size: 11px; }
 .waiting-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 0; border-top: 1px solid var(--line); }
+.room-actions { display: flex; gap: 8px; }
+.join-room-form { display: flex; align-items: center; gap: 9px; margin: 14px 0; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: rgba(8, 25, 16, .6); }
+.join-room-form label { color: #b6d2bf; font-size: 9px; }
+.join-room-form input { width: min(220px, 42%); text-transform: uppercase; }
 .waiting-hint { display: flex; align-items: center; gap: 8px; color: #84998a; font-size: 9px; }
 .waiting-hint i { width: 6px; height: 6px; border-radius: 50%; background: #e6b951; }
 .screen-actions { display: flex; align-items: center; gap: 18px; }
@@ -121,6 +125,11 @@
 .hand-caption span { color: #718579; font-size: 8px; }
 .hand-placeholder { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 9px; min-height: 57px; border: 1px dashed rgba(125, 255, 192, .13); border-radius: 8px; color: #718a79; font-size: 9px; }
 .hand-placeholder span { color: #4aa775; font-size: 19px; }
+.hand-cards { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; min-height: 57px; padding: 8px; border: 1px dashed rgba(125, 255, 192, .13); border-radius: 8px; }
+.playing-card { min-width: 39px; height: 55px; border: 1px solid #d5dccf; border-radius: 5px; background: #f5f3e8; color: #20271f; cursor: pointer; font-size: 12px; font-weight: 700; }
+.playing-card.red-card { color: #b93636; }
+.playing-card.selected { border-color: var(--mint); background: #d7ffe6; transform: translateY(-7px); }
+.playing-card:disabled { opacity: .48; cursor: not-allowed; }
 .turn-actions { display: flex; gap: 7px; }
 .turn-actions .primary-button, .turn-actions .secondary-button { min-height: 30px; padding: 0 11px; font-size: 8px; }
 .table-chat { display: flex; align-items: center; gap: 10px; margin-top: 9px; padding: 8px 11px; border: 1px solid rgba(125, 255, 192, .1); border-radius: 9px; background: rgba(8, 24, 15, .58); color: #9aaf9f; font-size: 8px; }
