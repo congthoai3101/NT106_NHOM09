@@ -1,3 +1,24 @@
+interface RoomPlayerView {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+  isReady: boolean;
+  isHost: boolean;
+  connected?: boolean;
+}
+
+interface RoomView {
+  id: string;
+  roomCode: string;
+  hostId: string;
+  maxPlayers: number;
+  status: string;
+  players: RoomPlayerView[];
+}
+
+const cardRanks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
+const cardSuits = ['♠', '♣', '♦', '♥'];
+
 document.addEventListener('DOMContentLoaded', () => {
   const toast = document.getElementById('toast') as HTMLDivElement;
   const friendSearch = document.getElementById('friendSearch') as HTMLInputElement;
@@ -10,6 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const waitingSeats = document.querySelector<HTMLElement>('.waiting-seats');
   const featureScreens = Array.from(document.querySelectorAll<HTMLElement>('[data-screen]'));
   let activeFilter = 'all';
+  let currentRoom: RoomView | null = null;
+  let currentUserId = '';
+  let myCards: number[] = [];
+  let selectedCards = new Set<number>();
+  let currentTurnPlayerId = '';
+  let playerCardCounts: Record<string, number> = {};
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
   function redirectToLogin(): void {
@@ -80,9 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
       avatar.hidden = true;
     }
 
-    document.getElementById('waitingPlayerName')!.textContent = name;
     document.getElementById('tableSelfName')!.textContent = name;
-    for (const id of ['waitingAvatar', 'tableSelfAvatar']) {
+    for (const id of ['tableSelfAvatar']) {
       const avatarSlot = document.getElementById(id)!;
       avatarSlot.replaceChildren();
       if (resolvedAvatar) {
@@ -96,6 +122,228 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function renderRoomSeats(): void {
+    if (!currentRoom) return;
+    const waitingSeatsElement = document.getElementById('waitingSeats')!;
+    waitingSeatsElement.replaceChildren();
+    waitingSeatsElement.classList.toggle('duel-mode', currentRoom.maxPlayers === 2);
+
+    for (let index = 0; index < currentRoom.maxPlayers; index++) {
+      const player = currentRoom.players[index];
+      const seat = document.createElement('div');
+      seat.className = `waiting-seat${player?.id === currentRoom.hostId ? ' host-seat' : ''}`;
+      const avatar = document.createElement('div');
+      avatar.className = 'waiting-avatar';
+      if (player?.avatarUrl) {
+        const image = document.createElement('img');
+        image.src = player.avatarUrl;
+        image.alt = '';
+        avatar.append(image);
+      } else {
+        avatar.textContent = player ? player.username.slice(0, 1).toLocaleUpperCase('vi') : '＋';
+      }
+      const name = document.createElement('strong');
+      name.textContent = player?.username || 'Đang chờ';
+      const detail = document.createElement('small');
+      detail.textContent = player
+        ? player.connected === false ? 'MẤT KẾT NỐI'
+          : player.id === currentRoom.hostId ? 'CHỦ PHÒNG' : player.isReady ? 'SẴN SÀNG' : 'ĐANG CHỜ'
+        : `VỊ TRÍ ${String(index + 1).padStart(2, '0')}`;
+      seat.append(avatar, name, detail);
+      if (player?.id === currentRoom.hostId) {
+        const check = document.createElement('span');
+        check.className = 'seat-check';
+        check.textContent = '✓';
+        seat.append(check);
+      }
+      waitingSeatsElement.append(seat);
+    }
+
+    document.getElementById('previewRoomName')!.textContent = currentRoom.roomCode;
+    document.getElementById('roomCodeText')!.textContent = currentRoom.roomCode;
+    document.getElementById('roomStatusText')!.textContent = currentRoom.status === 'PLAYING'
+      ? 'ĐANG CHƠI'
+      : currentRoom.status === 'FINISHED' ? 'ĐÃ KẾT THÚC' : 'ĐANG CHỜ';
+    document.getElementById('roomWaitingHint')!.textContent =
+      `${currentRoom.players.length}/${currentRoom.maxPlayers} người chơi · Chia sẻ mã phòng để mời bạn`;
+    const readyButton = document.getElementById('readyButton') as HTMLButtonElement;
+    const myPlayer = currentRoom.players.find((player) => player.id === currentUserId);
+    readyButton.hidden = currentRoom.status !== 'WAITING' || !myPlayer;
+    readyButton.textContent = myPlayer?.isReady ? 'Hủy sẵn sàng' : 'Sẵn sàng';
+    const startButton = document.getElementById('startGameButton') as HTMLButtonElement;
+    startButton.hidden = currentRoom.status !== 'WAITING' || currentRoom.hostId !== currentUserId;
+    startButton.disabled = currentRoom.players.length !== currentRoom.maxPlayers ||
+      currentRoom.players.some((player) => !player.isReady);
+
+    renderTableSeats();
+  }
+
+  function renderTableSeats(): void {
+    const room = currentRoom;
+    if (!room) return;
+    const felt = document.querySelector<HTMLElement>('.table-felt');
+    if (!felt) return;
+    felt.querySelectorAll<HTMLElement>('.table-seat:not(.table-seat-bottom)').forEach((seat) => seat.remove());
+    const opponents = room.players.filter((player) => player.id !== currentUserId);
+    const positions = ['table-seat-top', 'table-seat-left', 'table-seat-right'];
+    opponents.forEach((player, index) => {
+      const seat = document.createElement('div');
+      seat.className = `table-seat ${positions[index]}`;
+      const avatar = document.createElement('span');
+      avatar.className = 'table-avatar';
+      avatar.textContent = player.username.slice(0, 1).toLocaleUpperCase('vi');
+      const name = document.createElement('strong');
+      name.textContent = player.username;
+      const detail = document.createElement('small');
+      detail.textContent = `${room.status === 'PLAYING' ? `BÀI CÒN ${playerCardCounts[player.id] ?? 13} · ` : ''}${player.id === currentTurnPlayerId ? 'ĐẾN LƯỢT' : 'ĐỐI THỦ'}`;
+      seat.append(avatar, name, detail);
+      felt.append(seat);
+    });
+  }
+
+  function applyRoom(value: unknown): void {
+    if (!value || typeof value !== 'object') return;
+    const payload = value as Record<string, unknown>;
+    const roomData = (payload.room && typeof payload.room === 'object' ? payload.room : payload) as Partial<RoomView>;
+    if (typeof roomData.roomCode !== 'string' || typeof roomData.hostId !== 'string') return;
+    currentRoom = {
+      id: typeof roomData.id === 'string' ? roomData.id : '',
+      roomCode: roomData.roomCode,
+      hostId: roomData.hostId,
+      maxPlayers: roomData.maxPlayers === 2 ? 2 : 4,
+      status: typeof roomData.status === 'string' ? roomData.status : 'WAITING',
+      players: Array.isArray(roomData.players) ? roomData.players as RoomPlayerView[] : []
+    };
+    localStorage.setItem('currentRoomCode', currentRoom.roomCode);
+    renderRoomSeats();
+    showScreen('waiting-room');
+  }
+
+  function updateGameControls(): void {
+    const isMyTurn = Boolean(currentUserId && currentTurnPlayerId === currentUserId);
+    const playButton = document.getElementById('playCardsButton') as HTMLButtonElement;
+    const passButton = document.getElementById('passTurnButton') as HTMLButtonElement;
+    playButton.disabled = !isMyTurn || selectedCards.size === 0;
+    passButton.disabled = !isMyTurn;
+    document.getElementById('handStatus')!.textContent = isMyTurn ? 'Lượt của bạn' : 'Đang chờ lượt';
+    document.getElementById('gameStatusText')!.textContent = isMyTurn ? 'LƯỢT CỦA BẠN' : 'ĐANG ĐẤU';
+    renderTableSeats();
+  }
+
+  function renderHand(): void {
+    const handContainer = document.getElementById('handCards')!;
+    handContainer.replaceChildren();
+    handContainer.hidden = false;
+    document.getElementById('handPlaceholder')!.hidden = true;
+    for (const card of myCards) {
+      const cardButton = document.createElement('button');
+      const suit = cardSuits[card % 4];
+      cardButton.type = 'button';
+      cardButton.className = `playing-card${card % 4 >= 2 ? ' red-card' : ''}${selectedCards.has(card) ? ' selected' : ''}`;
+      cardButton.textContent = `${cardRanks[Math.floor(card / 4)]}${suit}`;
+      cardButton.setAttribute('aria-pressed', String(selectedCards.has(card)));
+      cardButton.addEventListener('click', () => {
+        if (selectedCards.has(card)) selectedCards.delete(card);
+        else selectedCards.add(card);
+        renderHand();
+        updateGameControls();
+      });
+      handContainer.append(cardButton);
+    }
+    updateGameControls();
+  }
+
+  function handleGameEvent(event: { opcode: number; payload: Record<string, unknown> }): void {
+    const { opcode, payload } = event;
+    if (opcode === 2005 && currentRoom && payload.player && typeof payload.player === 'object') {
+      const player = payload.player as RoomPlayerView;
+      const existingIndex = currentRoom.players.findIndex((entry) => entry.id === player.id);
+      if (existingIndex < 0) currentRoom.players.push(player);
+      else currentRoom.players[existingIndex] = { ...currentRoom.players[existingIndex], ...player, connected: true };
+      renderRoomSeats();
+    } else if (opcode === 2009 && currentRoom && typeof payload.playerId === 'string') {
+      if (payload.disconnected === true) {
+        currentRoom.players = currentRoom.players.map((player) =>
+          player.id === payload.playerId ? { ...player, connected: false } : player
+        );
+      } else {
+        currentRoom.players = currentRoom.players.filter((player) => player.id !== payload.playerId);
+      }
+      renderRoomSeats();
+    } else if (opcode === 2012 && currentRoom && typeof payload.playerId === 'string') {
+      currentRoom.players = currentRoom.players.map((player) => player.id === payload.playerId
+        ? { ...player, isReady: payload.isReady === true }
+        : player);
+      renderRoomSeats();
+    } else if (opcode === 3001 && Array.isArray(payload.myCards)) {
+      myCards = payload.myCards.filter((card): card is number => Number.isInteger(card));
+      playerCardCounts = payload.playerCardCounts && typeof payload.playerCardCounts === 'object'
+        ? payload.playerCardCounts as Record<string, number>
+        : {};
+      selectedCards.clear();
+      currentTurnPlayerId = String(payload.firstTurnPlayerId || '');
+      if (currentRoom) currentRoom.status = 'PLAYING';
+      renderRoomSeats();
+      showScreen('table');
+      renderHand();
+    } else if (opcode === 3003 && typeof payload.playerId === 'string') {
+      currentTurnPlayerId = payload.playerId;
+      updateGameControls();
+    } else if (opcode === 3007 && Array.isArray(payload.cards)) {
+      if (payload.playerId === currentUserId) {
+        const played = payload.cards as number[];
+        myCards = myCards.filter((card) => !played.includes(card));
+        selectedCards.clear();
+        renderHand();
+      }
+      if (payload.playerCardCounts && typeof payload.playerCardCounts === 'object') {
+        playerCardCounts = payload.playerCardCounts as Record<string, number>;
+      }
+      document.getElementById('gameTableCards')!.textContent = `${String(payload.combination || 'BÀI')} · ${Array.from(payload.cards as number[], (card) => `${cardRanks[Math.floor(card / 4)]}${cardSuits[card % 4]}`).join(' ')}`;
+      if (typeof payload.nextTurnPlayerId === 'string') currentTurnPlayerId = payload.nextTurnPlayerId;
+      updateGameControls();
+    } else if (opcode === 3011 && typeof payload.playerId === 'string') {
+      document.getElementById('gameTableCards')!.textContent = 'Người chơi đã bỏ lượt';
+      if (typeof payload.nextTurnPlayerId === 'string') currentTurnPlayerId = payload.nextTurnPlayerId;
+      updateGameControls();
+    } else if (opcode === 3013 && typeof payload.leaderPlayerId === 'string') {
+      currentTurnPlayerId = payload.leaderPlayerId;
+      document.getElementById('gameTableCards')!.textContent = 'Vòng mới — bài giữa bàn đã được bỏ';
+      updateGameControls();
+    } else if (opcode === 3017) {
+      if (currentRoom) {
+        currentRoom.status = 'FINISHED';
+        renderRoomSeats();
+      }
+      currentTurnPlayerId = '';
+      updateGameControls();
+      document.getElementById('gameStatusText')!.textContent = 'VÁN ĐẤU KẾT THÚC';
+      document.getElementById('handStatus')!.textContent = 'Ván đấu đã kết thúc';
+      showToast('Ván đấu đã kết thúc.');
+    } else if (opcode === 1006 && payload.success === true) {
+      applyRoom(payload.room);
+      if (Array.isArray(payload.myCards)) {
+        myCards = payload.myCards.filter((card): card is number => Number.isInteger(card));
+        currentTurnPlayerId = String(payload.currentTurnPlayerId || '');
+        playerCardCounts = payload.playerCardCounts && typeof payload.playerCardCounts === 'object'
+          ? payload.playerCardCounts as Record<string, number>
+          : {};
+        const tableCards = Array.isArray(payload.tableCards)
+          ? payload.tableCards.filter((card): card is number => Number.isInteger(card) && card >= 0 && card <= 51)
+          : [];
+        document.getElementById('gameTableCards')!.textContent = tableCards.length
+          ? `${String(payload.lastCombination || 'BÀI')} · ${tableCards.map((card) => `${cardRanks[Math.floor(card / 4)]}${cardSuits[card % 4]}`).join(' ')}`
+          : 'Chưa có bài trên bàn';
+        showScreen('table');
+        renderHand();
+      }
+    } else if (opcode === 3006 || opcode === 3010 || opcode === 2014) {
+      if (payload.success === false) showToast(String(payload.message || 'Thao tác không thành công.'));
+    } else if (opcode === 4999 || (payload.type && typeof payload.message === 'string')) {
+      showToast(String(payload.message));
+    }
+  }
+
   window.electronAuth.subscribe((state) => {
     if (state.isLoading) return;
     if (!state.isAuthenticated || !state.user || !state.profile || state.profile.id !== state.user.id) {
@@ -103,10 +351,24 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    currentUserId = state.user.id;
+    if (state.session?.access_token) void window.electronAuth!.updateGameToken(state.session.access_token);
     setPlayerName(state.profile.username, state.profile.avatarUrl);
     document.body.classList.remove('auth-pending');
     document.getElementById('authGuard')?.remove();
+    if (currentRoom) renderRoomSeats();
+    const savedRoomCode = localStorage.getItem('currentRoomCode');
+    if (savedRoomCode && !currentRoom) {
+      void window.electronAuth!.joinGameRoom(savedRoomCode)
+        .then((result) => applyRoom(result))
+        .catch((error) => {
+          localStorage.removeItem('currentRoomCode');
+          showToast(error instanceof Error ? error.message : 'Không thể khôi phục phòng.');
+        });
+    }
   });
+
+  window.electronAuth.onGameEvent(handleGameEvent);
 
   function updateRooms(): void {
     const visibleCards = roomCards.filter((card) => {
@@ -194,11 +456,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (submitButton) submitButton.disabled = true;
     try {
       const room = await window.electronAuth!.createRoom(roomName, maxPlayers);
+      const joined = await window.electronAuth!.joinGameRoom(room.roomCode);
+      applyRoom(joined.room);
       document.getElementById('previewRoomName')!.textContent = room.name;
-      document.getElementById('roomCodeText')!.textContent = room.roomCode;
-      document.getElementById('roomStatusText')!.textContent = 'ĐANG CHỜ';
-      document.getElementById('roomWaitingHint')!.textContent = `Đang chờ người chơi · Tối đa ${room.maxPlayers} người`;
-      showScreen('waiting-room');
       showToast(`Đã tạo phòng ${room.roomCode}.`);
     } catch (error) {
       showToast(error instanceof Error ? error.message : 'Không thể tạo phòng. Vui lòng thử lại.');
@@ -206,6 +466,91 @@ document.addEventListener('DOMContentLoaded', () => {
       if (submitButton) submitButton.disabled = false;
     }
   });
+
+  const joinRoomForm = document.getElementById('joinRoomForm') as HTMLFormElement;
+  joinRoomForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const codeInput = document.getElementById('joinRoomCodeInput') as HTMLInputElement;
+    const code = codeInput.value.trim().toUpperCase();
+    const button = joinRoomForm.querySelector<HTMLButtonElement>('button[type="submit"]');
+    if (!code) return;
+    if (button) button.disabled = true;
+    try {
+      const result = await window.electronAuth!.joinGameRoom(code);
+      applyRoom(result.room);
+      showToast(`Đã vào phòng ${code}.`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể tham gia phòng.');
+    } finally {
+      if (button) button.disabled = false;
+    }
+  });
+
+  document.getElementById('readyButton')?.addEventListener('click', async () => {
+    const myPlayer = currentRoom?.players.find((player) => player.id === currentUserId);
+    try {
+      const result = await window.electronAuth!.setGameReady(!myPlayer?.isReady);
+      if (result.success === false) showToast(String(result.message || 'Không thể đổi trạng thái sẵn sàng.'));
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể kết nối game server.');
+    }
+  });
+
+  document.getElementById('startGameButton')?.addEventListener('click', async () => {
+    try {
+      const result = await window.electronAuth!.startGame();
+      if (result.success === false) showToast(String(result.message || 'Chưa thể bắt đầu ván.'));
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể bắt đầu ván.');
+    }
+  });
+
+  document.getElementById('playCardsButton')?.addEventListener('click', async () => {
+    try {
+      const result = await window.electronAuth!.playCards([...selectedCards]);
+      if (result.success === false) showToast(String(result.message || 'Bài đánh không hợp lệ.'));
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể đánh bài.');
+    }
+  });
+
+  document.getElementById('passTurnButton')?.addEventListener('click', async () => {
+    try {
+      const result = await window.electronAuth!.passTurn();
+      if (result.success === false) showToast(String(result.message || 'Không thể bỏ lượt.'));
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể bỏ lượt.');
+    }
+  });
+
+  document.getElementById('copyRoomCodeButton')?.addEventListener('click', async () => {
+    if (!currentRoom) return;
+    try {
+      await navigator.clipboard.writeText(currentRoom.roomCode);
+      showToast('Đã sao chép mã phòng.');
+    } catch {
+      showToast(`Mã phòng: ${currentRoom.roomCode}`);
+    }
+  });
+
+  async function leaveRoom(): Promise<void> {
+    try {
+      await window.electronAuth!.leaveGameRoom();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể rời phòng.');
+    } finally {
+      currentRoom = null;
+      myCards = [];
+      selectedCards.clear();
+      playerCardCounts = {};
+      currentTurnPlayerId = '';
+      localStorage.removeItem('currentRoomCode');
+      showScreen();
+    }
+  }
+
+  document.getElementById('leaveWaitingRoomButton')?.addEventListener('click', () => void leaveRoom());
+  document.getElementById('leaveTableButton')?.addEventListener('click', () => void leaveRoom());
 
   document.querySelectorAll<HTMLButtonElement>('.period-button').forEach((button) => {
     button.addEventListener('click', () => {
