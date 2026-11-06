@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import * as dotenv from 'dotenv';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { randomBytes, randomUUID } from 'node:crypto';
 
 // ============================================================================
 // 1. CẤU HÌNH BIẾN MÔI TRƯỜNG & KHỞI TẠO BACKEND SUPABASE CLIENT
@@ -309,6 +310,95 @@ app.get('/api/profile/me', verifyJwtToken, async (req: AuthenticatedRequest, res
   }
 });
 
+/**
+ * [POST] /api/rooms (Protected Route)
+ * Tạo phòng và thêm chủ phòng vào room_players.
+ * Body: { name, maxPlayers }
+ */
+app.post('/api/rooms', verifyJwtToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const { name, maxPlayers } = req.body as { name?: unknown; maxPlayers?: unknown };
+  const roomName = typeof name === 'string' ? name.trim() : '';
+
+  if (!roomName || roomName.length > 32) {
+    res.status(400).json({ success: false, message: 'Tên phòng phải có từ 1 đến 32 ký tự.' });
+    return;
+  }
+
+  if (maxPlayers !== 2 && maxPlayers !== 4) {
+    res.status(400).json({ success: false, message: 'Số người chơi chỉ được là 2 hoặc 4.' });
+    return;
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !req.user?.id) {
+    res.status(401).json({ success: false, message: 'Phiên đăng nhập không hợp lệ.' });
+    return;
+  }
+
+  const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+  const roomId = randomUUID();
+  const roomCode = randomBytes(4).toString('hex').toUpperCase();
+  let roomCreated = false;
+
+  try {
+    const { error: roomError } = await userSupabase.from('rooms').insert({
+      id: roomId,
+      room_code: roomCode,
+      host_id: req.user.id,
+      mode: maxPlayers === 2 ? '2p' : '4p',
+      max_players: maxPlayers,
+      status: 'waiting',
+      created_at: new Date().toISOString()
+    });
+
+    if (roomError) {
+      res.status(500).json({
+        success: false,
+        message: `Không thể tạo phòng trong Supabase: ${roomError.message}`
+      });
+      return;
+    }
+    roomCreated = true;
+
+    const { error: playerError } = await userSupabase.from('room_players').insert({
+      room_id: roomId,
+      player_id: req.user.id,
+      joined_at: new Date().toISOString(),
+      is_ready: true
+    });
+
+    if (playerError) {
+      const { error: rollbackError } = await userSupabase.from('rooms').delete().eq('id', roomId);
+      if (rollbackError) {
+        console.error('[Room Create Rollback Error]:', rollbackError.message);
+      }
+      res.status(500).json({
+        success: false,
+        message: `Phòng đã tạo nhưng không thể thêm chủ phòng: ${playerError.message}`
+      });
+      return;
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Tạo phòng thành công.',
+      data: { id: roomId, roomCode, name: roomName, maxPlayers }
+    });
+  } catch (error) {
+    if (roomCreated) {
+      const { error: rollbackError } = await userSupabase.from('rooms').delete().eq('id', roomId);
+      if (rollbackError) {
+        console.error('[Room Create Rollback Error]:', rollbackError.message);
+      }
+    }
+    console.error('[Room Create Error]:', error);
+    res.status(500).json({ success: false, message: 'Lỗi máy chủ khi tạo phòng.' });
+  }
+});
+
 // ============================================================================
 // 5. KHỞI CHẠY HTTP SERVER VÀ LẮNG NGHE PORT
 // ============================================================================
@@ -319,5 +409,6 @@ app.listen(PORT, () => {
   console.log(`🔑 [REGISTER]     : POST http://localhost:${PORT}/api/auth/register`);
   console.log(`🔓 [LOGIN]        : POST http://localhost:${PORT}/api/auth/login`);
   console.log(`🛡️ [PROFILE ME]   : GET  http://localhost:${PORT}/api/profile/me`);
+  console.log(`🏠 [CREATE ROOM]  : POST http://localhost:${PORT}/api/rooms`);
   console.log(`====================================================`);
 });
