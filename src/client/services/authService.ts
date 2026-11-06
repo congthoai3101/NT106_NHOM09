@@ -10,6 +10,16 @@ import {
 const API_PORT = process.env.PORT || 5000;
 const API_BASE_URL = `http://localhost:${API_PORT}/api`;
 
+async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 /**
  * AuthService - Giao tiếp với Web API Gateway (src/server.ts)
  * Tuân thủ mô hình 3 lớp (3-tier Architecture) đúng theo Slide báo cáo:
@@ -170,20 +180,23 @@ export class AuthService {
    * 6. Lấy profile bảo mật qua Header Authorization: Bearer <token>
    * GET /api/profile/me
    */
-  static async fetchProfile(userId: string): Promise<UserProfile | null> {
+  static async fetchProfile(userId: string, accessToken: string): Promise<UserProfile | null> {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-
-      if (token) {
+      if (accessToken) {
         // Gọi Web API có kèm Bearer Token
-        const response = await fetch(`${API_BASE_URL}/profile/me`, {
+        let response: Response | null = null;
+        try {
+          response = await fetchWithTimeout(`${API_BASE_URL}/profile/me`, {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${accessToken}`
           }
         });
 
-        if (response.ok) {
+        } catch (error) {
+          console.warn('[Profile API Warning]:', error);
+        }
+
+        if (response?.ok) {
           const resJson = await response.json();
           if (resJson.success && resJson.data) {
             return {
@@ -201,6 +214,7 @@ export class AuthService {
         .from('profiles')
         .select('*')
         .eq('id', userId)
+        .abortSignal(AbortSignal.timeout(8000))
         .maybeSingle();
 
       if (error || !data) return null;
