@@ -14,7 +14,7 @@
 
 ```bash
 # 1. Clone repository
-git clone <repo-url>
+git clone https://github.com/congthoai3101/NT106_NHOM09.git
 cd NT106_NHOM09
 
 # 2. Cài đặt dependencies
