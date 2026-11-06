@@ -15,6 +15,37 @@ model Profile {
   avatarUrl String?  @map("avatar_url") @db.Text
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
+  // Quan hệ 2 chiều với các bảng khác
+  hostedRooms Room[]       @relation("HostRooms")
+  roomPlayers RoomPlayer[]
+
   @@map("profiles")
 }
   
+// 2. Bảng Phòng chơi (Rooms)
+model Room {
+  id         String   @id @default(uuid()) // Tự động sinh chuỗi UUID ngẫu nhiên
+  roomCode   String   @unique @map("room_code") @db.VarChar(10)
+  hostId     String   @map("host_id")
+  mode       String   @default("classic") @db.VarChar(20) // classic, rank...
+  maxPlayers Int      @default(4) @map("max_players") @db.SmallInt // 2 hoặc 4 người
+  status     String   @default("waiting") @db.VarChar(20) // waiting, playing, finished
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  // Quan hệ: Mỗi phòng có 1 chủ phòng và nhiều người chơi
+  host       Profile  @relation("HostRooms", fields: [hostId], references: [id], onDelete: Cascade)
+  players    RoomPlayer[]
+  @@map("rooms")
+}
+// 3. Bảng Người chơi trong phòng (Room_Players)
+model RoomPlayer {
+  roomId   String   @map("room_id")
+  playerId String   @map("player_id")
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz
+  isReady  Boolean  @default(false) @map("is_ready")
+  // Quan hệ khóa ngoại
+  room   Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  player Profile @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  // Khóa chính phức hợp (Composite Key): Tránh 1 người chơi bị trùng trong cùng 1 phòng
+  @@id([roomId, playerId])
+  @@map("room_players")
+}
