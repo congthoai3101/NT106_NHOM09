@@ -4,7 +4,45 @@
 
 Đồ án môn NT106 xây dựng trò chơi Tiến Lên Miền Nam trực tuyến theo mô hình Client–Server, cho phép nhiều người chơi tham gia cùng một phòng và chơi bài thông qua kết nối mạng.
 
-## 2. Chức năng dự kiến
+## 2. Hướng dẫn cài đặt & chạy dự án
+
+### Yêu cầu
+- [Node.js](https://nodejs.org/) >= 18
+- Tài khoản [Supabase](https://supabase.com/) (đã có project)
+
+### Các bước
+
+```bash
+# 1. Clone repository
+git clone <repo-url>
+cd NT106_NHOM09
+
+# 2. Cài đặt dependencies
+npm install
+
+# 3. Tạo file .env từ template (tự động)
+npm run setup
+```
+
+> **Sau bước 3**, mở file `.env` vừa được tạo và điền các giá trị thật vào:
+>
+> | Biến | Lấy ở đâu |
+> |---|---|
+> | `DATABASE_URL` / `DIRECT_URL` | Supabase → Project Settings → Database → Connection string |
+> | `JWT_SECRET` | Tự đặt một chuỗi bí mật bất kỳ |
+> | `SUPABASE_URL` / `SUPABASE_ANON_KEY` | Supabase → Project Settings → API |
+> | `SMTP_USER` / `SMTP_PASS` | Gmail → Google Account → Security → App Passwords |
+
+```bash
+# 4. Đồng bộ schema database
+npm run db:generate
+npm run db:push
+
+# 5. Chạy server (development)
+npm run dev
+```
+
+## 3. Chức năng dự kiến
 
 - Quản lý tài khoản người chơi.
 - Tạo phòng, tham gia phòng và quản lý người chơi.
