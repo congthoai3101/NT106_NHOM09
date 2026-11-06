@@ -9,7 +9,7 @@
     "desktop": "tsc && electron dist/client/main/main.js",
     "start:desktop": "electron dist/client/main/main.js",
     "start": "node dist/server.js",
-    "test": "tsx test-auth.ts",
+    "test": "tsx --test test/tcpProtocol.test.ts test/tienLenGame.test.ts test/gameTcpClient.test.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio"
