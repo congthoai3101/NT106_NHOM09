@@ -95,13 +95,9 @@
           <button class="action-card create-action" type="button" data-action="Tạo phòng">
             <span class="action-symbol">＋</span><span><strong>Tạo phòng</strong><small>Tạo bàn chơi theo ý bạn</small></span><b>↗</b>
           </button>
-          <form class="join-room-form" id="joinRoomForm">
-            <label for="joinRoomCodeInput">Nhập mã phòng</label>
-            <div class="join-room-controls">
-              <input class="lobby-input" id="joinRoomCodeInput" type="text" maxlength="10" placeholder="Ví dụ: A1B2C3D4" required>
-              <button class="secondary-button" type="submit">Vào phòng <span>→</span></button>
-            </div>
-          </form>
+          <button class="action-card join-action" type="button" data-action="Nhập mã phòng">
+            <span class="action-symbol join-symbol">⌕</span><span><strong>Nhập mã phòng</strong><small>Vào phòng bằng mã được chia sẻ</small></span><b>→</b>
+          </button>
         </div>
       </section>
 
@@ -122,6 +118,20 @@
     </main>
 
     <div class="feature-stage" id="featureStage" hidden>
+      <section class="feature-screen join-room-feature" data-screen="join-room" hidden>
+        <div class="feature-heading">
+          <button class="back-link" type="button" data-screen-back>← <span>Quay lại sảnh</span></button>
+          <span class="feature-kicker">THAM GIA PHÒNG</span>
+          <h1>Nhập <span>mã phòng</span></h1>
+          <p>Nhập mã phòng bạn nhận được để tham gia cùng bạn bè.</p>
+        </div>
+        <form class="join-room-form join-room-panel" id="joinRoomForm">
+          <label class="field-label" for="joinRoomCodeInput">Mã phòng</label>
+          <input class="lobby-input" id="joinRoomCodeInput" type="text" maxlength="10" placeholder="Ví dụ: A1B2C3D4" autocomplete="off" required>
+          <button class="primary-button" type="submit">Vào phòng <span>→</span></button>
+        </form>
+      </section>
+
       <section class="feature-screen" data-screen="create-room" hidden>
         <div class="feature-heading">
           <button class="back-link" type="button" data-screen-back>← <span>Quay lại sảnh</span></button>
