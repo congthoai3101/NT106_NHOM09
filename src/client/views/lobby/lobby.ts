@@ -16,13 +16,24 @@ interface RoomView {
   players: RoomPlayerView[];
 }
 
+interface PlayerRoomView {
+  id: string;
+  roomCode: string;
+  hostId: string;
+  maxPlayers: number;
+  status: string;
+  playerCount: number;
+  isMember: boolean;
+}
+
 const cardRanks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
 const cardSuits = ['♠', '♣', '♦', '♥'];
 
 document.addEventListener('DOMContentLoaded', () => {
   const toast = document.getElementById('toast') as HTMLDivElement;
   const friendSearch = document.getElementById('friendSearch') as HTMLInputElement;
-  const roomCards = Array.from(document.querySelectorAll<HTMLElement>('.room-card'));
+  const roomGrid = document.getElementById('roomGrid')!;
+  const emptyState = document.getElementById('emptyState')!;
   const filters = Array.from(document.querySelectorAll<HTMLButtonElement>('.filter-chip'));
   const featureStage = document.getElementById('featureStage') as HTMLDivElement;
   const mainContent = document.querySelector<HTMLElement>('.main-content')!;
@@ -31,8 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const waitingSeats = document.querySelector<HTMLElement>('.waiting-seats');
   const featureScreens = Array.from(document.querySelectorAll<HTMLElement>('[data-screen]'));
   let activeFilter = 'all';
+  let playerRooms: PlayerRoomView[] = [];
   let currentRoom: RoomView | null = null;
   let currentUserId = '';
+  let roomListLoadedFor = '';
   let myCards: number[] = [];
   let selectedCards = new Set<number>();
   let currentTurnPlayerId = '';
@@ -59,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!screenName) {
       featureStage.hidden = true;
       mainContent.hidden = false;
+      if (currentUserId) void refreshMyRooms();
       return;
     }
 
@@ -173,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startButton = document.getElementById('startGameButton') as HTMLButtonElement;
     startButton.hidden = currentRoom.status !== 'WAITING' || currentRoom.hostId !== currentUserId;
     startButton.disabled = currentRoom.players.length !== currentRoom.maxPlayers ||
-      currentRoom.players.some((player) => !player.isReady);
+      currentRoom.players.some((player) => !player.isReady || player.connected === false);
 
     renderTableSeats();
   }
@@ -215,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
       players: Array.isArray(roomData.players) ? roomData.players as RoomPlayerView[] : []
     };
     localStorage.setItem('currentRoomCode', currentRoom.roomCode);
+    renderRooms();
     renderRoomSeats();
     showScreen('waiting-room');
   }
@@ -335,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ? `${String(payload.lastCombination || 'BÀI')} · ${tableCards.map((card) => `${cardRanks[Math.floor(card / 4)]}${cardSuits[card % 4]}`).join(' ')}`
           : 'Chưa có bài trên bàn';
         showScreen('table');
+        void refreshMyRooms();
         renderHand();
       }
     } else if (opcode === 3006 || opcode === 3010 || opcode === 2014) {
@@ -353,6 +369,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     currentUserId = state.user.id;
     if (state.session?.access_token) void window.electronAuth!.updateGameToken(state.session.access_token);
+    if (roomListLoadedFor !== currentUserId) {
+      roomListLoadedFor = currentUserId;
+      void refreshMyRooms();
+    }
     setPlayerName(state.profile.username, state.profile.avatarUrl);
     document.body.classList.remove('auth-pending');
     document.getElementById('authGuard')?.remove();
@@ -370,20 +390,135 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.electronAuth.onGameEvent(handleGameEvent);
 
-  function updateRooms(): void {
-    const visibleCards = roomCards.filter((card) => {
-      const matchesStatus = activeFilter === 'all' || card.dataset.status === activeFilter;
-      card.classList.toggle('filtered-out', !matchesStatus);
-      return matchesStatus;
+  function renderRooms(): void {
+    roomGrid.replaceChildren();
+    const filterCounts = { all: playerRooms.length, open: 0, playing: 0, full: 0 };
+    const visibleRooms = playerRooms.filter((room) => {
+      const isFull = room.playerCount >= room.maxPlayers;
+      if (room.status === 'PLAYING') filterCounts.playing++;
+      else if (isFull) filterCounts.full++;
+      else filterCounts.open++;
+      return activeFilter === 'all' ||
+        (activeFilter === 'playing' && room.status === 'PLAYING') ||
+        (activeFilter === 'full' && isFull) ||
+        (activeFilter === 'open' && room.status !== 'PLAYING' && !isFull);
     });
-    document.getElementById('emptyState')?.classList.toggle('visible', visibleCards.length === 0);
+
+    for (const [filter, count] of Object.entries(filterCounts)) {
+      const countElement = document.querySelector<HTMLElement>(`.filter-chip[data-filter="${filter}"] span`);
+      if (countElement) countElement.textContent = String(count);
+    }
+
+    for (const room of visibleRooms) {
+      const card = document.createElement('article');
+      card.className = `room-card${room.playerCount >= room.maxPlayers ? ' room-full' : ''}`;
+      card.dataset.status = room.status === 'PLAYING'
+        ? 'playing'
+        : room.playerCount >= room.maxPlayers ? 'full' : 'open';
+      card.style.setProperty('--room-accent', room.status === 'PLAYING' ? '#d9ac58' : '#39ff88');
+
+      const art = document.createElement('div');
+      art.className = 'room-art art-forest';
+      const shade = document.createElement('div');
+      shade.className = 'room-shade';
+      const topLine = document.createElement('div');
+      topLine.className = 'room-topline';
+      const titleGroup = document.createElement('div');
+      titleGroup.className = 'room-title-group';
+      const crest = document.createElement('span');
+      crest.className = 'room-crest';
+      crest.textContent = '♠';
+      const titleCopy = document.createElement('div');
+      const title = document.createElement('h3');
+      title.textContent = `Phòng ${room.roomCode}`;
+      const subtitle = document.createElement('p');
+      const role = room.hostId === currentUserId ? 'Chủ phòng' : 'Thành viên';
+      subtitle.textContent = `${role} · ${room.maxPlayers} người`;
+      titleCopy.append(title, subtitle);
+      titleGroup.append(crest, titleCopy);
+      const status = document.createElement('span');
+      status.className = 'room-status';
+      const statusDot = document.createElement('i');
+      const statusText = document.createElement('span');
+      statusText.textContent = room.status === 'PLAYING'
+        ? 'ĐANG CHƠI'
+        : room.playerCount >= room.maxPlayers ? 'ĐÃ ĐẦY' : 'ĐANG CHỜ';
+      status.append(statusDot, statusText);
+      topLine.append(titleGroup, status);
+
+      const seats = document.createElement('div');
+      seats.className = 'room-seats';
+      for (let index = 0; index < room.maxPlayers; index++) {
+        const seat = document.createElement('div');
+        seat.className = index < room.playerCount ? 'seat' : 'seat empty';
+        const avatar = document.createElement('span');
+        avatar.textContent = index < room.playerCount ? '♙' : '＋';
+        const label = document.createElement('small');
+        label.textContent = index < room.playerCount ? 'Đã vào' : 'Còn trống';
+        seat.append(avatar, label);
+        seats.append(seat);
+      }
+
+      const bottom = document.createElement('div');
+      bottom.className = 'room-bottom';
+      const count = document.createElement('span');
+      count.className = 'player-count';
+      count.textContent = `${room.playerCount}/${room.maxPlayers} người chơi`;
+      const joinButton = document.createElement('button');
+      joinButton.type = 'button';
+      joinButton.className = 'join-button';
+      joinButton.textContent = currentRoom?.id === room.id ? 'Mở phòng' : 'Vào phòng';
+      joinButton.disabled = (room.status !== 'WAITING' && currentRoom?.id !== room.id) ||
+        (room.playerCount >= room.maxPlayers && !room.isMember);
+      joinButton.addEventListener('click', () => {
+        if (currentRoom?.id === room.id) {
+          showScreen(currentRoom.status === 'PLAYING' ? 'table' : 'waiting-room');
+          return;
+        }
+        void openRoom(room.roomCode, joinButton);
+      });
+      bottom.append(count, joinButton);
+      card.append(art, shade, topLine, seats, bottom);
+      roomGrid.append(card);
+    }
+
+    emptyState.classList.toggle('visible', visibleRooms.length === 0);
+    if (visibleRooms.length === 0) {
+      emptyState.textContent = playerRooms.length
+        ? 'Không có phòng nào phù hợp với bộ lọc.'
+        : 'Bạn chưa tạo hoặc tham gia phòng nào.';
+    }
+  }
+
+  async function refreshMyRooms(): Promise<void> {
+    try {
+      playerRooms = await window.electronAuth!.listMyRooms();
+      renderRooms();
+    } catch (error) {
+      console.error('[My Rooms Error]:', error);
+      emptyState.textContent = 'Không thể tải danh sách phòng. Vui lòng thử tải lại sau.';
+      emptyState.classList.add('visible');
+      showToast(error instanceof Error ? error.message : 'Không thể tải danh sách phòng.');
+    }
+  }
+
+  async function openRoom(roomCode: string, button: HTMLButtonElement): Promise<void> {
+    button.disabled = true;
+    try {
+      const result = await window.electronAuth!.joinGameRoom(roomCode);
+      applyRoom(result.room);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Không thể vào phòng.');
+    } finally {
+      button.disabled = false;
+    }
   }
 
   filters.forEach((filter) => {
     filter.addEventListener('click', () => {
       activeFilter = filter.dataset.filter || 'all';
       filters.forEach((item) => item.classList.toggle('selected', item === filter));
-      updateRooms();
+      renderRooms();
     });
   });
 
@@ -391,13 +526,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const query = friendSearch.value.trim().toLocaleLowerCase('vi');
     document.querySelectorAll<HTMLElement>('.friend-row').forEach((row) => {
       row.classList.toggle('filtered-out', !row.dataset.name?.toLocaleLowerCase('vi').includes(query));
-    });
-  });
-
-  document.querySelectorAll<HTMLButtonElement>('.join-button:not(:disabled)').forEach((button) => {
-    button.addEventListener('click', () => {
-      const roomName = button.closest('.room-card')?.querySelector('h3')?.textContent;
-      showToast(`Đang kết nối vào phòng ${roomName || 'đã chọn'}...`);
     });
   });
 
@@ -420,11 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (button.dataset.nav === 'Bảng xếp hạng') {
         showScreen('leaderboard');
       } else if (button.dataset.nav === 'Sảnh chơi') {
-        if (currentRoom) {
-          showScreen(currentRoom.status === 'PLAYING' ? 'table' : 'waiting-room');
-        } else {
-          showScreen();
-        }
+        showScreen();
       } else {
         showToast('Cơ sở dữ liệu chưa có tính năng bạn bè.');
       }
@@ -438,11 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll<HTMLButtonElement>('[data-screen-back]').forEach((button) => {
     button.addEventListener('click', () => {
       const activeScreen = featureScreens.find((screen) => !screen.hidden)?.dataset.screen;
-      if (activeScreen === 'waiting-room' && currentRoom) {
-        void leaveRoom();
-      } else {
-        showScreen();
-      }
+      if (activeScreen) showScreen();
     });
   });
 
@@ -469,6 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const room = await window.electronAuth!.createRoom(roomName, maxPlayers);
       const joined = await window.electronAuth!.joinGameRoom(room.roomCode);
       applyRoom(joined.room);
+      void refreshMyRooms();
       document.getElementById('previewRoomName')!.textContent = room.name;
       showToast(`Đã tạo phòng ${room.roomCode}.`);
     } catch (error) {
@@ -564,6 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('leaveWaitingRoomButton')?.addEventListener('click', () => void leaveRoom());
   document.getElementById('leaveTableButton')?.addEventListener('click', () => void leaveRoom());
+  document.getElementById('returnToLobbyFromTableButton')?.addEventListener('click', () => showScreen());
 
   document.querySelectorAll<HTMLButtonElement>('.period-button').forEach((button) => {
     button.addEventListener('click', () => {
