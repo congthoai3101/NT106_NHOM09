@@ -30,6 +30,15 @@ interface ElectronAuthAPI {
     name: string;
     maxPlayers: number;
   }>;
+  listMyRooms: () => Promise<Array<{
+    id: string;
+    roomCode: string;
+    hostId: string;
+    maxPlayers: number;
+    status: string;
+    playerCount: number;
+    isMember: boolean;
+  }>>;
   joinGameRoom: (roomCode: string) => Promise<{ success: boolean; room?: Record<string, unknown> }>;
   updateGameToken: (accessToken: string) => Promise<void>;
   setGameReady: (isReady: boolean) => Promise<Record<string, unknown>>;
