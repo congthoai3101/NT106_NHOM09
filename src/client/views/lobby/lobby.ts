@@ -530,7 +530,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll<HTMLButtonElement>('.action-card').forEach((button) => {
     button.addEventListener('click', () => {
-      showScreen('create-room');
+      if (button.dataset.action === 'Nhập mã phòng') {
+        showScreen('join-room');
+        (document.getElementById('joinRoomCodeInput') as HTMLInputElement).focus();
+      } else {
+        showScreen('create-room');
+      }
     });
   });
 
