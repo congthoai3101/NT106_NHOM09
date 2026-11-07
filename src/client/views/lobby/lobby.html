@@ -106,7 +106,7 @@
 
       <section class="rooms-section" aria-labelledby="roomsHeading">
         <div class="section-heading">
-          <div><h2 id="roomsHeading">Danh sách phòng</h2><span class="room-subtitle">Tìm bàn phù hợp và nhập cuộc ngay</span></div>
+          <div><h2 id="roomsHeading">Phòng của bạn</h2><span class="room-subtitle">Các phòng bạn đã tạo hoặc tham gia</span></div>
           <div class="room-filters" role="group" aria-label="Lọc phòng">
               <button class="filter-chip selected" type="button" data-filter="all">Tất cả <span>—</span></button>
               <button class="filter-chip" type="button" data-filter="open">Còn chỗ <span>—</span></button>
@@ -121,7 +121,7 @@
           <button class="secondary-button" type="submit">Tham gia phòng</button>
         </form>
         <div class="room-grid" id="roomGrid"></div>
-        <div class="empty-state visible" id="emptyState">Cơ sở dữ liệu hiện chưa có bảng phòng chơi.</div>
+        <div class="empty-state visible" id="emptyState">Bạn chưa tạo hoặc tham gia phòng nào.</div>
       </section>
     </main>
 
@@ -174,15 +174,15 @@
           <div class="waiting-room-toolbar"><div><span class="room-status-pill"><i></i><span id="roomStatusText">CHƯA KẾT NỐI</span></span><h2 id="previewRoomName">Phòng Tiến Lên</h2></div><div class="room-code-box">MÃ PHÒNG <strong id="roomCodeText">— — — —</strong><button type="button" id="copyRoomCodeButton" title="Sao chép mã phòng">▢</button></div></div>
           <div class="waiting-seats" id="waitingSeats"></div>
           <div class="waiting-footer"><span class="waiting-hint"><i></i><span id="roomWaitingHint">Đang chờ người chơi tham gia</span></span><div class="room-actions"><button class="secondary-button" id="readyButton" type="button">Sẵn sàng</button><button class="primary-button" id="startGameButton" type="button" hidden>Bắt đầu ván <span>→</span></button></div></div>
-          <div class="screen-actions"><button class="secondary-button" type="button" data-screen-target="table">Xem giao diện bàn chơi</button><button class="text-button" id="leaveWaitingRoomButton" type="button">Thoát phòng</button></div>
+          <div class="screen-actions"><button class="secondary-button" type="button" data-screen-target="table">Xem giao diện bàn chơi</button><button class="text-button" id="leaveWaitingRoomButton" type="button">Rời phòng</button></div>
         </div>
       </section>
 
       <section class="feature-screen table-screen" data-screen="table" hidden>
         <div class="table-toolbar">
-          <button class="back-link" id="leaveTableButton" type="button">← <span>Rời bàn</span></button>
+          <button class="back-link" id="returnToLobbyFromTableButton" type="button">← <span>Quay về sảnh</span></button>
           <div class="table-title"><span class="feature-kicker">BÀN CHƠI · BẢN XEM TRƯỚC</span><strong>Tiến Lên Miền Nam</strong></div>
-          <div class="table-round">VÁN <strong>—</strong><span>CHỜ NGƯỜI CHƠI</span></div>
+          <div class="table-round">VÁN <strong>—</strong><span>CHỜ NGƯỜI CHƠI</span><button class="text-button" id="leaveTableButton" type="button">Rời phòng</button></div>
           <button class="icon-button" type="button" data-unavailable aria-label="Cài đặt bàn">⚙</button>
         </div>
         <div class="game-table-wrap">
