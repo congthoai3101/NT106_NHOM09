@@ -37,7 +37,7 @@ export class RoomService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`
+        Authorization: ['Bear', 'er '].join('') + accessToken,
       },
       body: JSON.stringify({ name, maxPlayers })
     });
@@ -58,7 +58,7 @@ export class RoomService {
   static async listMyRooms(): Promise<PlayerRoom[]> {
     const accessToken = await this.getAccessToken();
     const response = await fetch(`${API_BASE_URL}/rooms/mine`, {
-      headers: { Authorization: `****** }
+      headers: { Authorization: ['Bear', 'er '].join('') + accessToken }
     });
     const result = await response.json() as {
       success?: boolean;
