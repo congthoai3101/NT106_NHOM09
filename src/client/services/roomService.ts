@@ -10,13 +10,28 @@ export interface CreatedRoom {
   maxPlayers: number;
 }
 
+export interface PlayerRoom {
+  id: string;
+  roomCode: string;
+  hostId: string;
+  maxPlayers: number;
+  status: string;
+  playerCount: number;
+  isMember: boolean;
+}
+
 export class RoomService {
-  static async createRoom(name: string, maxPlayers: number): Promise<CreatedRoom> {
+  private static async getAccessToken(): Promise<string> {
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     if (sessionError) throw new Error(sessionError.message);
 
     const accessToken = sessionData.session?.access_token;
     if (!accessToken) throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+    return accessToken;
+  }
+
+  static async createRoom(name: string, maxPlayers: number): Promise<CreatedRoom> {
+    const accessToken = await this.getAccessToken();
 
     const response = await fetch(`${API_BASE_URL}/rooms`, {
       method: 'POST',
@@ -37,6 +52,23 @@ export class RoomService {
       throw new Error(result.message || 'Không thể tạo phòng.');
     }
 
+    return result.data;
+  }
+
+  static async listMyRooms(): Promise<PlayerRoom[]> {
+    const accessToken = await this.getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/rooms/mine`, {
+      headers: { Authorization: `****** }
+    });
+    const result = await response.json() as {
+      success?: boolean;
+      message?: string;
+      data?: PlayerRoom[];
+    };
+
+    if (!response.ok || !result.success || !result.data) {
+      throw new Error(result.message || 'Không thể tải danh sách phòng.');
+    }
     return result.data;
   }
 }
