@@ -432,8 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const title = document.createElement('h3');
       title.textContent = `Phòng ${room.roomCode}`;
       const subtitle = document.createElement('p');
-      const role = room.hostId === currentUserId ? 'Chủ phòng' : 'Thành viên';
-      subtitle.textContent = `${role} · ${room.maxPlayers} người`;
+      subtitle.textContent = `${room.hostId === currentUserId ? 'Chủ phòng' : 'Thành viên'} · ${room.maxPlayers} người`;
       titleCopy.append(title, subtitle);
       titleGroup.append(crest, titleCopy);
       const status = document.createElement('span');
@@ -531,14 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll<HTMLButtonElement>('.action-card').forEach((button) => {
     button.addEventListener('click', () => {
-      const action = button.dataset.action || 'Thao tác';
-      if (action === 'Tạo phòng') {
-        showScreen('create-room');
-      } else if (action === 'Bảng xếp hạng') {
-        showScreen('leaderboard');
-      } else {
-        showToast('Chưa có phòng trong cơ sở dữ liệu để tham gia nhanh.');
-      }
+      showScreen('create-room');
     });
   });
 
