@@ -69,9 +69,9 @@
     <main class="main-content">
       <section class="welcome-section">
         <div class="welcome-copy">
-          <div class="eyebrow"><span></span> </div>
+          <div class="eyebrow"><span></span></div>
           <h1>Chào <span id="welcomeName">Thoai</span>, vào bàn thôi!</h1>
-          <p>Tiến Lên Miền Nam <b>—</b> </p>
+          <p>Tiến Lên Miền Nam <b>—</b></p>
         </div>
         <div class="hero-spade" aria-hidden="true">♠</div>
         <div class="stats-row">
@@ -95,12 +95,13 @@
           <button class="action-card create-action" type="button" data-action="Tạo phòng">
             <span class="action-symbol">＋</span><span><strong>Tạo phòng</strong><small>Tạo bàn chơi theo ý bạn</small></span><b>↗</b>
           </button>
-          <button class="action-card quick-action" type="button" data-action="Tham gia nhanh">
-            <span class="action-symbol lightning">ϟ</span><span><strong>Tham gia nhanh</strong><small>Vào bàn trống ngẫu nhiên</small></span><b>↗</b>
-          </button>
-          <button class="action-card rank-action" type="button" data-action="Bảng xếp hạng">
-            <span class="action-symbol trophy-symbol">♜</span><span><strong>Bảng xếp hạng</strong><small>Xem top cao thủ</small></span><b>↗</b>
-          </button>
+          <form class="join-room-form" id="joinRoomForm">
+            <label for="joinRoomCodeInput">Nhập mã phòng</label>
+            <div class="join-room-controls">
+              <input class="lobby-input" id="joinRoomCodeInput" type="text" maxlength="10" placeholder="Ví dụ: A1B2C3D4" required>
+              <button class="secondary-button" type="submit">Vào phòng <span>→</span></button>
+            </div>
+          </form>
         </div>
       </section>
 
@@ -108,18 +109,13 @@
         <div class="section-heading">
           <div><h2 id="roomsHeading">Phòng của bạn</h2><span class="room-subtitle">Các phòng bạn đã tạo hoặc tham gia</span></div>
           <div class="room-filters" role="group" aria-label="Lọc phòng">
-              <button class="filter-chip selected" type="button" data-filter="all">Tất cả <span>—</span></button>
-              <button class="filter-chip" type="button" data-filter="open">Còn chỗ <span>—</span></button>
-              <button class="filter-chip" type="button" data-filter="playing">Đang chơi <span>—</span></button>
-              <button class="filter-chip" type="button" data-filter="full">Đã đầy <span>—</span></button>
-            </div>
+            <button class="filter-chip selected" type="button" data-filter="all">Tất cả <span>0</span></button>
+            <button class="filter-chip" type="button" data-filter="open">Còn chỗ <span>0</span></button>
+            <button class="filter-chip" type="button" data-filter="playing">Đang chơi <span>0</span></button>
+            <button class="filter-chip" type="button" data-filter="full">Đã đầy <span>0</span></button>
+          </div>
         </div>
 
-        <form class="join-room-form" id="joinRoomForm">
-          <label for="joinRoomCodeInput">Đã có mã phòng?</label>
-          <input class="lobby-input" id="joinRoomCodeInput" type="text" maxlength="10" placeholder="Nhập mã phòng" required>
-          <button class="secondary-button" type="submit">Tham gia phòng</button>
-        </form>
         <div class="room-grid" id="roomGrid"></div>
         <div class="empty-state visible" id="emptyState">Bạn chưa tạo hoặc tham gia phòng nào.</div>
       </section>
