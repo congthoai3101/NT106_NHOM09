@@ -311,6 +311,89 @@ app.get('/api/profile/me', verifyJwtToken, async (req: AuthenticatedRequest, res
   }
 });
 
+app.get('/api/rooms/mine', verifyJwtToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!req.user?.id) {
+    res.status(401).json({ success: false, message: 'Phiên đăng nhập không hợp lệ.' });
+    return;
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    res.status(401).json({ success: false, message: 'Phiên đăng nhập không hợp lệ.' });
+    return;
+  }
+
+  const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+
+  try {
+    const [hostedRoomsResult, membershipsResult] = await Promise.all([
+      userSupabase.from('rooms')
+        .select('id')
+        .eq('host_id', req.user.id)
+        .in('status', ['waiting', 'playing']),
+      userSupabase.from('room_players')
+        .select('room_id')
+        .eq('player_id', req.user.id)
+    ]);
+
+    if (hostedRoomsResult.error) throw new Error(hostedRoomsResult.error.message);
+    if (membershipsResult.error) throw new Error(membershipsResult.error.message);
+
+    const roomIds = [...new Set([
+      ...(hostedRoomsResult.data || []).map((room) => room.id as string),
+      ...(membershipsResult.data || []).map((membership) => membership.room_id as string)
+    ])];
+    if (!roomIds.length) {
+      res.json({ success: true, data: [] });
+      return;
+    }
+
+    const { data: rooms, error: roomsError } = await userSupabase.from('rooms')
+      .select('id,room_code,host_id,max_players,status,created_at')
+      .in('id', roomIds)
+      .in('status', ['waiting', 'playing'])
+      .order('created_at', { ascending: false });
+    if (roomsError) throw new Error(roomsError.message);
+    if (!rooms?.length) {
+      res.json({ success: true, data: [] });
+      return;
+    }
+
+    const { data: members, error: membersError } = await userSupabase.from('room_players')
+      .select('room_id,player_id')
+      .in('room_id', rooms.map((room) => room.id));
+    if (membersError) throw new Error(membersError.message);
+
+    const memberCounts = new Map<string, number>();
+    const memberRoomIds = new Set((members || [])
+      .filter((member) => member.player_id === req.user.id)
+      .map((member) => member.room_id as string));
+    for (const member of members || []) {
+      const roomId = member.room_id as string;
+      memberCounts.set(roomId, (memberCounts.get(roomId) || 0) + 1);
+    }
+
+    res.json({
+      success: true,
+      data: rooms.map((room) => ({
+        id: room.id,
+        roomCode: room.room_code,
+        hostId: room.host_id,
+        maxPlayers: room.max_players,
+        status: String(room.status).toUpperCase(),
+        playerCount: memberCounts.get(room.id as string) || 0,
+        isMember: memberRoomIds.has(room.id as string)
+      }))
+    });
+  } catch (error) {
+    console.error('[My Rooms API Error]:', error);
+    res.status(500).json({ success: false, message: 'Không thể tải danh sách phòng.' });
+  }
+});
+
 /**
  * [POST] /api/rooms (Protected Route)
  * Tạo phòng và thêm chủ phòng vào room_players.
