@@ -99,6 +99,7 @@
 .table-round { display: grid; gap: 3px; margin-left: auto; color: #738a7b; font-size: 7px; letter-spacing: 1px; }
 .table-round strong { color: #c7d8cb; font-size: 11px; }
 .table-round span { color: #d5b65d; }
+.table-round .text-button { justify-self: end; margin-top: 0; font-size: 8px; }
 .game-table-wrap { display: grid; flex: 1; min-height: 340px; place-items: center; padding: 8px 0 17px; }
 .game-table { position: relative; width: min(100%, 720px); height: clamp(300px, 43vh, 430px); padding: 15px; border: 1px solid rgba(166, 126, 62, .5); border-radius: 48%; background: linear-gradient(140deg, #503a20, #947341 30%, #372817 77%, #806239); box-shadow: 0 17px 45px rgba(0,0,0,.4), inset 0 0 0 5px rgba(21, 15, 8, .75), inset 0 0 0 7px rgba(205, 169, 97, .35), inset 0 0 25px rgba(0,0,0,.9); }
 .table-felt { position: relative; width: 100%; height: 100%; overflow: hidden; border: 1px solid rgba(125, 255, 192, .23); border-radius: 48%; background: radial-gradient(ellipse at 50% 43%, #12603e, #08432d 47%, #062b1d 100%); box-shadow: inset 0 0 55px rgba(0,0,0,.6), inset 0 0 0 6px rgba(0,0,0,.16); }
