@@ -347,85 +347,102 @@ app.post('/api/auth/forgot-password', async (req: Request, res: Response): Promi
 
 app.post('/api/auth/reset-password', async (req: Request, res: Response): Promise<void> => {
     try {
-        const {email, otp, newPassword} = req.body;
-        if (!email || !otp || !newPassword){
+        const { email, otp, newPassword } = req.body;
+
+        if (!email || !otp || !newPassword) {
             res.status(400).json({
                 success: false,
                 message: 'Vui lòng nhập đầy đủ thông tin yêu cầu'
-            })
-            return
+            });
+            return;
         }
 
-        if (otp.length != 6) {
+        if (String(otp).length !== 6) {
             res.status(400).json({
                 success: false,
-                message: 'Vui lòng nhập mã đủ số lượng kí tự mã OTP'
-            })
-            return; 
+                message: 'Vui lòng nhập đủ 6 kí tự mã OTP'
+            });
+            return;
         }
 
         if (newPassword.length < 6 || newPassword.length > 25) {
             res.status(400).json({
                 success: false,
                 message: 'Mật khẩu phải từ 6 đến 25 kí tự'
-            })
-            return
+            });
+            return;
         }
 
-        const { data, error } = await supabase.auth.verifyOtp({email, token: otp, type:'recovery'})
+        const requestClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: false,
+                autoRefreshToken: false,
+                detectSessionInUrl: false
+            }
+        });
 
-        if (error) {
+        console.log('[RESET] ===== NEW REQUEST =====');
+        console.log('[RESET] Verifying OTP for email:', email);
+        
+        // 2. Xác thực OTP
+        const { data, error } = await requestClient.auth.verifyOtp({
+            email,
+            token: String(otp),
+            type: 'recovery'
+        });
+
+        if (error || !data.session) {
             res.status(400).json({
                 success: false,
-                message: 'Mã OTP không hợp lệ, vui lòng nhập lại',
+                message: 'Mã OTP không hợp lệ hoặc đã hết hạn, vui lòng nhập lại',
                 error: error
-            })
-            return
+            });
+            return;
         }
 
-        const accessToken = data.session?.access_token;
-        if (!accessToken) {
+        const { error: sessionError } = await requestClient.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token
+        });
+
+        if (sessionError) {
             res.status(403).json({
-              success: false,
-              message: 'Không có quyền'
-            })
+                success: false,
+                message: 'Không thể thiết lập phiên xác thực',
+                error: sessionError
+            });
             return;
         }
 
-        const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-          global: {
-            headers: {
-              Authorization: `Bearer ${accessToken}` }}, 
-              auth: {persistSession:false, autoRefreshToken: false }
-            }
-          );
-
-          const {error: err} = await userSupabase.auth.updateUser({
+        console.log('[RESET] Updating password...');
+        const { error: updateError } = await requestClient.auth.updateUser({
             password: newPassword
-          })
+        });
 
-          if (err) {
+        if (updateError) {
             res.status(400).json({
-              success: false,
-              message: 'Đổi mật khẩu không thành công',
-              error: err
-            })
+                success: false,
+                message: 'Đổi mật khẩu không thành công',
+                error: updateError
+            });
             return;
-          }
+        }
 
-          res.status(200).json({
+        await requestClient.auth.signOut();
+
+        res.status(200).json({
             success: true,
             message: 'Đổi mật khẩu thành công'
-          })
+        });
 
-    } catch(err:any) {
+    } catch (err: any) {
         res.status(500).json({
             success: false,
             message: 'Lỗi hệ thống',
-            error: err
-        })
+            error: err.message || err
+        });
     }
-})
+});
 
 
 /**
