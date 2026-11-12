@@ -16,24 +16,13 @@ interface RoomView {
   players: RoomPlayerView[];
 }
 
-interface PlayerRoomView {
-  id: string;
-  roomCode: string;
-  hostId: string;
-  maxPlayers: number;
-  status: string;
-  playerCount: number;
-  isMember: boolean;
-}
-
 const cardRanks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
 const cardSuits = ['♠', '♣', '♦', '♥'];
 
 document.addEventListener('DOMContentLoaded', () => {
   const toast = document.getElementById('toast') as HTMLDivElement;
   const friendSearch = document.getElementById('friendSearch') as HTMLInputElement;
-  const roomGrid = document.getElementById('roomGrid')!;
-  const emptyState = document.getElementById('emptyState')!;
+  const roomCards = Array.from(document.querySelectorAll<HTMLElement>('.room-card'));
   const filters = Array.from(document.querySelectorAll<HTMLButtonElement>('.filter-chip'));
   const featureStage = document.getElementById('featureStage') as HTMLDivElement;
   const mainContent = document.querySelector<HTMLElement>('.main-content')!;
@@ -42,10 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const waitingSeats = document.querySelector<HTMLElement>('.waiting-seats');
   const featureScreens = Array.from(document.querySelectorAll<HTMLElement>('[data-screen]'));
   let activeFilter = 'all';
-  let playerRooms: PlayerRoomView[] = [];
   let currentRoom: RoomView | null = null;
   let currentUserId = '';
-  let roomListLoadedFor = '';
   let myCards: number[] = [];
   let selectedCards = new Set<number>();
   let currentTurnPlayerId = '';
@@ -72,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!screenName) {
       featureStage.hidden = true;
       mainContent.hidden = false;
-      if (currentUserId) void refreshMyRooms();
       return;
     }
 
@@ -157,12 +143,12 @@ document.addEventListener('DOMContentLoaded', () => {
         avatar.textContent = player ? player.username.slice(0, 1).toLocaleUpperCase('vi') : '＋';
       }
       const name = document.createElement('strong');
-      name.textContent = player?.username || 'Chờ người chơi';
+      name.textContent = player?.username || 'Đang chờ';
       const detail = document.createElement('small');
       detail.textContent = player
-        ? player.connected === false ? 'Mất kết nối'
-          : player.id === currentRoom.hostId ? 'Chủ phòng' : player.isReady ? 'Sẵn sàng' : 'Đang chờ'
-        : `Vị trí ${index + 1}`;
+        ? player.connected === false ? 'MẤT KẾT NỐI'
+          : player.id === currentRoom.hostId ? 'CHỦ PHÒNG' : player.isReady ? 'SẴN SÀNG' : 'ĐANG CHỜ'
+        : `VỊ TRÍ ${String(index + 1).padStart(2, '0')}`;
       seat.append(avatar, name, detail);
       if (player?.id === currentRoom.hostId) {
         const check = document.createElement('span');
@@ -176,8 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('previewRoomName')!.textContent = currentRoom.roomCode;
     document.getElementById('roomCodeText')!.textContent = currentRoom.roomCode;
     document.getElementById('roomStatusText')!.textContent = currentRoom.status === 'PLAYING'
-      ? 'Đang chơi'
-      : currentRoom.status === 'FINISHED' ? 'Đã kết thúc' : 'Đang chờ';
+      ? 'ĐANG CHƠI'
+      : currentRoom.status === 'FINISHED' ? 'ĐÃ KẾT THÚC' : 'ĐANG CHỜ';
     document.getElementById('roomWaitingHint')!.textContent =
       `${currentRoom.players.length}/${currentRoom.maxPlayers} người chơi · Chia sẻ mã phòng để mời bạn`;
     const readyButton = document.getElementById('readyButton') as HTMLButtonElement;
@@ -187,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startButton = document.getElementById('startGameButton') as HTMLButtonElement;
     startButton.hidden = currentRoom.status !== 'WAITING' || currentRoom.hostId !== currentUserId;
     startButton.disabled = currentRoom.players.length !== currentRoom.maxPlayers ||
-      currentRoom.players.some((player) => !player.isReady || player.connected === false);
+      currentRoom.players.some((player) => !player.isReady);
 
     renderTableSeats();
   }
@@ -209,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const name = document.createElement('strong');
       name.textContent = player.username;
       const detail = document.createElement('small');
-      detail.textContent = `${room.status === 'PLAYING' ? `Còn ${playerCardCounts[player.id] ?? 13} lá · ` : ''}${player.id === currentTurnPlayerId ? 'Đến lượt' : 'Đối thủ'}`;
+      detail.textContent = `${room.status === 'PLAYING' ? `BÀI CÒN ${playerCardCounts[player.id] ?? 13} · ` : ''}${player.id === currentTurnPlayerId ? 'ĐẾN LƯỢT' : 'ĐỐI THỦ'}`;
       seat.append(avatar, name, detail);
       felt.append(seat);
     });
@@ -229,7 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
       players: Array.isArray(roomData.players) ? roomData.players as RoomPlayerView[] : []
     };
     localStorage.setItem('currentRoomCode', currentRoom.roomCode);
-    renderRooms();
     renderRoomSeats();
     showScreen('waiting-room');
   }
@@ -241,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playButton.disabled = !isMyTurn || selectedCards.size === 0;
     passButton.disabled = !isMyTurn;
     document.getElementById('handStatus')!.textContent = isMyTurn ? 'Lượt của bạn' : 'Đang chờ lượt';
-    document.getElementById('gameStatusText')!.textContent = isMyTurn ? 'Lượt của bạn' : 'Đang đấu';
+    document.getElementById('gameStatusText')!.textContent = isMyTurn ? 'LƯỢT CỦA BẠN' : 'ĐANG ĐẤU';
     renderTableSeats();
   }
 
@@ -314,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (payload.playerCardCounts && typeof payload.playerCardCounts === 'object') {
         playerCardCounts = payload.playerCardCounts as Record<string, number>;
       }
-      document.getElementById('gameTableCards')!.textContent = `${String(payload.combination || 'Bài')} · ${Array.from(payload.cards as number[], (card) => `${cardRanks[Math.floor(card / 4)]}${cardSuits[card % 4]}`).join(' ')}`;
+      document.getElementById('gameTableCards')!.textContent = `${String(payload.combination || 'BÀI')} · ${Array.from(payload.cards as number[], (card) => `${cardRanks[Math.floor(card / 4)]}${cardSuits[card % 4]}`).join(' ')}`;
       if (typeof payload.nextTurnPlayerId === 'string') currentTurnPlayerId = payload.nextTurnPlayerId;
       updateGameControls();
     } else if (opcode === 3011 && typeof payload.playerId === 'string') {
@@ -332,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       currentTurnPlayerId = '';
       updateGameControls();
-      document.getElementById('gameStatusText')!.textContent = 'Ván đấu kết thúc';
+      document.getElementById('gameStatusText')!.textContent = 'VÁN ĐẤU KẾT THÚC';
       document.getElementById('handStatus')!.textContent = 'Ván đấu đã kết thúc';
       showToast('Ván đấu đã kết thúc.');
     } else if (opcode === 1006 && payload.success === true) {
@@ -347,10 +332,9 @@ document.addEventListener('DOMContentLoaded', () => {
           ? payload.tableCards.filter((card): card is number => Number.isInteger(card) && card >= 0 && card <= 51)
           : [];
         document.getElementById('gameTableCards')!.textContent = tableCards.length
-          ? `${String(payload.lastCombination || 'Bài')} · ${tableCards.map((card) => `${cardRanks[Math.floor(card / 4)]}${cardSuits[card % 4]}`).join(' ')}`
+          ? `${String(payload.lastCombination || 'BÀI')} · ${tableCards.map((card) => `${cardRanks[Math.floor(card / 4)]}${cardSuits[card % 4]}`).join(' ')}`
           : 'Chưa có bài trên bàn';
         showScreen('table');
-        void refreshMyRooms();
         renderHand();
       }
     } else if (opcode === 3006 || opcode === 3010 || opcode === 2014) {
@@ -369,10 +353,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     currentUserId = state.user.id;
     if (state.session?.access_token) void window.electronAuth!.updateGameToken(state.session.access_token);
-    if (roomListLoadedFor !== currentUserId) {
-      roomListLoadedFor = currentUserId;
-      void refreshMyRooms();
-    }
     setPlayerName(state.profile.username, state.profile.avatarUrl);
     document.body.classList.remove('auth-pending');
     document.getElementById('authGuard')?.remove();
@@ -390,121 +370,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.electronAuth.onGameEvent(handleGameEvent);
 
-  function renderRooms(): void {
-    roomGrid.replaceChildren();
-    const filterCounts = { all: playerRooms.length, open: 0, playing: 0, full: 0 };
-    const visibleRooms = playerRooms.filter((room) => {
-      const isFull = room.playerCount >= room.maxPlayers;
-      if (room.status === 'PLAYING') filterCounts.playing++;
-      else if (isFull) filterCounts.full++;
-      else filterCounts.open++;
-      return activeFilter === 'all' ||
-        (activeFilter === 'playing' && room.status === 'PLAYING') ||
-        (activeFilter === 'full' && isFull) ||
-        (activeFilter === 'open' && room.status !== 'PLAYING' && !isFull);
+  function updateRooms(): void {
+    const visibleCards = roomCards.filter((card) => {
+      const matchesStatus = activeFilter === 'all' || card.dataset.status === activeFilter;
+      card.classList.toggle('filtered-out', !matchesStatus);
+      return matchesStatus;
     });
-
-    for (const [filter, count] of Object.entries(filterCounts)) {
-      const countElement = document.querySelector<HTMLElement>(`.filter-chip[data-filter="${filter}"] span`);
-      if (countElement) countElement.textContent = String(count);
-    }
-
-    for (const room of visibleRooms) {
-      const isFull = room.playerCount >= room.maxPlayers;
-      const card = document.createElement('article');
-      card.className = `room-card${isFull ? ' room-full' : ''}`;
-      card.dataset.status = room.status === 'PLAYING' ? 'playing' : isFull ? 'full' : 'open';
-
-      const info = document.createElement('div');
-      info.className = 'room-info';
-      const title = document.createElement('h3');
-      title.textContent = `Phòng ${room.roomCode}`;
-      const subtitle = document.createElement('p');
-      subtitle.textContent = `${room.hostId === currentUserId ? 'Chủ phòng' : 'Thành viên'} · ${room.maxPlayers} người`;
-      info.append(title, subtitle);
-
-      const players = document.createElement('div');
-      players.className = 'room-players';
-      const seats = document.createElement('div');
-      seats.className = 'room-seats';
-      seats.setAttribute('aria-hidden', 'true');
-      for (let index = 0; index < room.maxPlayers; index++) {
-        const seat = document.createElement('span');
-        seat.className = index < room.playerCount ? 'seat' : 'seat empty';
-        seats.append(seat);
-      }
-      const count = document.createElement('span');
-      count.className = 'player-count';
-      count.textContent = `${room.playerCount}/${room.maxPlayers} người chơi`;
-      players.append(seats, count);
-
-      const status = document.createElement('span');
-      status.className = 'room-status';
-      const statusDot = document.createElement('i');
-      const statusText = document.createElement('span');
-      statusText.textContent = room.status === 'PLAYING' ? 'Đang chơi' : isFull ? 'Đã đầy' : 'Đang chờ';
-      status.append(statusDot, statusText);
-
-      const joinButton = document.createElement('button');
-      joinButton.type = 'button';
-      joinButton.className = 'join-button';
-      joinButton.textContent = currentRoom?.id === room.id ? 'Mở phòng' : 'Vào phòng';
-      joinButton.disabled = (room.status !== 'WAITING' && currentRoom?.id !== room.id) ||
-        (room.playerCount >= room.maxPlayers && !room.isMember);
-      joinButton.addEventListener('click', () => {
-        if (currentRoom?.id === room.id) {
-          showScreen(currentRoom.status === 'PLAYING' ? 'table' : 'waiting-room');
-          return;
-        }
-        void openRoom(room.roomCode, joinButton);
-      });
-      card.append(info, players, status, joinButton);
-      roomGrid.append(card);
-    }
-
-    emptyState.classList.remove('error');
-    emptyState.classList.toggle('visible', visibleRooms.length === 0);
-    if (visibleRooms.length === 0) {
-      emptyState.textContent = playerRooms.length
-        ? 'Không có phòng nào phù hợp với bộ lọc.'
-        : 'Bạn chưa tạo hoặc tham gia phòng nào. Chọn “Tạo phòng” hoặc “Nhập mã phòng” để bắt đầu.';
-    }
-  }
-
-  async function refreshMyRooms(): Promise<void> {
-    if (playerRooms.length === 0) {
-      emptyState.classList.remove('error');
-      emptyState.textContent = 'Đang tải danh sách phòng...';
-      emptyState.classList.add('visible');
-    }
-    try {
-      playerRooms = await window.electronAuth!.listMyRooms();
-      renderRooms();
-    } catch (error) {
-      console.error('[My Rooms Error]:', error);
-      emptyState.textContent = 'Không thể tải danh sách phòng. Kiểm tra kết nối máy chủ rồi thử lại.';
-      emptyState.classList.add('error', 'visible');
-      showToast(error instanceof Error ? error.message : 'Không thể tải danh sách phòng.');
-    }
-  }
-
-  async function openRoom(roomCode: string, button: HTMLButtonElement): Promise<void> {
-    button.disabled = true;
-    try {
-      const result = await window.electronAuth!.joinGameRoom(roomCode);
-      applyRoom(result.room);
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Không thể vào phòng.');
-    } finally {
-      button.disabled = false;
-    }
+    document.getElementById('emptyState')?.classList.toggle('visible', visibleCards.length === 0);
   }
 
   filters.forEach((filter) => {
     filter.addEventListener('click', () => {
       activeFilter = filter.dataset.filter || 'all';
       filters.forEach((item) => item.classList.toggle('selected', item === filter));
-      renderRooms();
+      updateRooms();
     });
   });
 
@@ -515,12 +394,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  document.querySelectorAll<HTMLButtonElement>('.join-button:not(:disabled)').forEach((button) => {
+    button.addEventListener('click', () => {
+      const roomName = button.closest('.room-card')?.querySelector('h3')?.textContent;
+      showToast(`Đang kết nối vào phòng ${roomName || 'đã chọn'}...`);
+    });
+  });
+
   document.querySelectorAll<HTMLButtonElement>('.action-card').forEach((button) => {
     button.addEventListener('click', () => {
-      if (button.dataset.action === 'Nhập mã phòng') {
-        openJoinModal();
-      } else {
+      const action = button.dataset.action || 'Thao tác';
+      if (action === 'Tạo phòng') {
         showScreen('create-room');
+      } else if (action === 'Bảng xếp hạng') {
+        showScreen('leaderboard');
+      } else {
+        showToast('Chưa có phòng trong cơ sở dữ liệu để tham gia nhanh.');
       }
     });
   });
@@ -531,7 +420,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (button.dataset.nav === 'Bảng xếp hạng') {
         showScreen('leaderboard');
       } else if (button.dataset.nav === 'Sảnh chơi') {
-        showScreen();
+        if (currentRoom) {
+          showScreen(currentRoom.status === 'PLAYING' ? 'table' : 'waiting-room');
+        } else {
+          showScreen();
+        }
       } else {
         showToast('Cơ sở dữ liệu chưa có tính năng bạn bè.');
       }
@@ -545,7 +438,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll<HTMLButtonElement>('[data-screen-back]').forEach((button) => {
     button.addEventListener('click', () => {
       const activeScreen = featureScreens.find((screen) => !screen.hidden)?.dataset.screen;
-      if (activeScreen) showScreen();
+      if (activeScreen === 'waiting-room' && currentRoom) {
+        void leaveRoom();
+      } else {
+        showScreen();
+      }
     });
   });
 
@@ -572,7 +469,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const room = await window.electronAuth!.createRoom(roomName, maxPlayers);
       const joined = await window.electronAuth!.joinGameRoom(room.roomCode);
       applyRoom(joined.room);
-      void refreshMyRooms();
       document.getElementById('previewRoomName')!.textContent = room.name;
       showToast(`Đã tạo phòng ${room.roomCode}.`);
     } catch (error) {
@@ -583,28 +479,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const joinRoomForm = document.getElementById('joinRoomForm') as HTMLFormElement;
-  const joinRoomModal = document.getElementById('joinRoomModal') as HTMLDivElement;
-  const joinCodeInput = document.getElementById('joinRoomCodeInput') as HTMLInputElement;
-
-  function openJoinModal(): void {
-    joinRoomModal.hidden = false;
-    joinCodeInput.focus();
-  }
-
-  function closeJoinModal(): void {
-    joinRoomModal.hidden = true;
-    joinCodeInput.value = '';
-  }
-
-  document.getElementById('joinRoomCloseButton')?.addEventListener('click', closeJoinModal);
-  document.getElementById('joinRoomCancelButton')?.addEventListener('click', closeJoinModal);
-  joinRoomModal.addEventListener('mousedown', (event) => {
-    if (event.target === joinRoomModal) closeJoinModal();
-  });
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !joinRoomModal.hidden) closeJoinModal();
-  });
-
   joinRoomForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const codeInput = document.getElementById('joinRoomCodeInput') as HTMLInputElement;
@@ -614,7 +488,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (button) button.disabled = true;
     try {
       const result = await window.electronAuth!.joinGameRoom(code);
-      closeJoinModal();
       applyRoom(result.room);
       showToast(`Đã vào phòng ${code}.`);
     } catch (error) {
@@ -691,7 +564,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('leaveWaitingRoomButton')?.addEventListener('click', () => void leaveRoom());
   document.getElementById('leaveTableButton')?.addEventListener('click', () => void leaveRoom());
-  document.getElementById('returnToLobbyFromTableButton')?.addEventListener('click', () => showScreen());
 
   document.querySelectorAll<HTMLButtonElement>('.period-button').forEach((button) => {
     button.addEventListener('click', () => {
@@ -715,25 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('notificationButton')?.addEventListener('click', () => showToast('Cơ sở dữ liệu chưa có dữ liệu thông báo.'));
-  const profileButton = document.getElementById('profileButton') as HTMLButtonElement;
-  const profileMenu = document.getElementById('profileMenu') as HTMLDivElement;
-  function setProfileMenu(open: boolean): void {
-    profileMenu.hidden = !open;
-    profileButton.setAttribute('aria-expanded', String(open));
-  }
-  profileButton.addEventListener('click', (event) => {
-    event.stopPropagation();
-    setProfileMenu(profileMenu.hidden);
-  });
-  document.addEventListener('click', (event) => {
-    if (!profileMenu.hidden && !profileMenu.contains(event.target as Node)) setProfileMenu(false);
-  });
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !profileMenu.hidden) {
-      setProfileMenu(false);
-      profileButton.focus();
-    }
-  });
+  document.getElementById('profileButton')?.addEventListener('click', () => showToast('Hồ sơ người chơi'));
   document.getElementById('addFriendButton')?.addEventListener('click', () => showToast('Tính năng thêm bạn sẽ sớm có mặt!'));
 
   document.getElementById('logoutButton')?.addEventListener('click', async () => {
