@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#212423">
+  <meta name="theme-color" content="#1d2420">
   <title>Sảnh chơi — Tiến Lên Miền Nam</title>
   <link rel="stylesheet" href="./lobby.css">
   <link rel="stylesheet" href="./features.css">
@@ -14,7 +14,7 @@
   <aside class="sidebar">
     <a class="brand" href="#" aria-label="Tiến Lên Miền Nam">
       <span class="brand-mark" aria-hidden="true">♠</span>
-      <span class="brand-name">Tiến Lên Miền Nam</span>
+      <span class="brand-name"><strong>Tiến Lên</strong><small>Miền Nam</small></span>
     </a>
     <nav class="main-nav" aria-label="Điều hướng chính">
       <button class="nav-item active" type="button" data-nav="Sảnh chơi" title="Sảnh chơi">
@@ -46,8 +46,8 @@
         </button>
         <div class="profile-menu-wrap">
           <button class="profile-button" type="button" id="profileButton" title="Tài khoản" aria-haspopup="menu" aria-expanded="false" aria-controls="profileMenu">
-            <img id="headerAvatar" alt="" hidden>
-            <span id="headerName">Người chơi</span>
+            <span class="profile-avatar"><img id="headerAvatar" alt="" hidden><span id="headerInitial" aria-hidden="true">N</span></span>
+            <span class="profile-text"><span id="headerName">Người chơi</span><small>Đã đăng nhập</small></span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
           </button>
           <div class="profile-menu" id="profileMenu" role="menu" hidden>
@@ -75,13 +75,15 @@
             <button class="primary-button action-card create-action" type="button" data-action="Tạo phòng">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Tạo phòng
             </button>
-            <button class="secondary-button action-card join-action" type="button" data-action="Nhập mã phòng">Nhập mã phòng</button>
+            <button class="secondary-button action-card join-action" type="button" data-action="Nhập mã phòng">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l3 3"/></svg>Nhập mã phòng
+            </button>
           </div>
         </div>
         <div class="stats-row">
-          <div class="stat-card"><span class="stat-copy"><small>Số trận</small><strong>—</strong></span></div>
-          <div class="stat-card"><span class="stat-copy"><small>Tỉ lệ thắng</small><strong>—</strong></span></div>
-          <div class="stat-card"><span class="stat-copy"><small>Chuỗi thắng</small><strong>—</strong></span></div>
+          <div class="stat-card"><span class="stat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="11" height="15" rx="2"/><path d="M8 21h9a2 2 0 0 0 2-2V8"/></svg></span><span class="stat-copy"><small>Số trận</small><strong>—</strong></span></div>
+          <div class="stat-card"><span class="stat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg></span><span class="stat-copy"><small>Tỉ lệ thắng</small><strong>—</strong></span></div>
+          <div class="stat-card"><span class="stat-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c1 3.500 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 .2 1.200.8 2 1.800 2.200C10.500 8 11 5.500 12 3z"/></svg></span><span class="stat-copy"><small>Chuỗi thắng</small><strong>—</strong></span></div>
         </div>
       </section>
 
@@ -97,7 +99,11 @@
           <button class="filter-chip" type="button" data-filter="full">Đã đầy <span>0</span></button>
         </div>
         <div class="room-grid" id="roomGrid"></div>
-        <div class="empty-state visible" id="emptyState">Bạn chưa tạo hoặc tham gia phòng nào. Chọn “Tạo phòng” hoặc “Nhập mã phòng” để bắt đầu.</div>
+        <div class="empty-state visible" id="emptyState">
+          <span class="empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="12" height="15" rx="2" transform="rotate(-8 9 13.500)"/><rect x="9" y="3" width="12" height="15" rx="2"/></svg></span>
+          <strong id="emptyTitle">Bạn chưa có phòng nào</strong>
+          <p id="emptyText">Chọn “Tạo phòng” hoặc “Nhập mã phòng” để bắt đầu một ván cùng bạn bè.</p>
+        </div>
       </section>
     </main>
 
@@ -222,6 +228,7 @@
   <aside class="friends-panel">
     <div class="friends-heading"><div><h2>Bạn bè</h2><span>Chưa có dữ liệu bạn bè</span></div><button class="icon-button add-friend" id="addFriendButton" type="button" aria-label="Thêm bạn" title="Thêm bạn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
     <label class="friend-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="friendSearch" type="search" placeholder="Tìm bạn bè" aria-label="Tìm bạn bè"><kbd>Ctrl+K</kbd></label>
+    <div class="friend-group-heading">Trực tuyến <span>0</span></div>
     <div class="friend-list online-list" id="onlineFriends"></div>
     <div class="offline-heading">Bạn bè khác</div>
     <div class="friend-list offline-list">
@@ -251,6 +258,15 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="room-closed-banner" id="roomClosedBanner" role="alert" aria-live="assertive" hidden>
+    <svg class="room-closed-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span id="roomClosedMessage">Phòng đã bị đóng bởi chủ phòng.</span>
+    <button class="room-closed-dismiss" id="roomClosedBannerDismiss" type="button" aria-label="Đóng thông báo">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+
   <script>var exports = {};</script>
   <script src="../../../../dist/client/views/lobby/lobby.js"></script>
 </body>
