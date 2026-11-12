@@ -373,15 +373,13 @@ async function joinRoom(session: ClientSession, payload: Record<string, unknown>
 
         reply(session, Opcode.JOIN_ROOM_RES, payload, { success: true, room: roomSnapshot(runtime) });
         if (!wasConnected) {
-          const joinedMember = runtime.members.get(session.userId!);
           broadcast(runtime, Opcode.ROOM_USER_JOINED_BC, {
             player: {
-              id: joinedMember?.id || session.userId,
-              username: joinedMember?.username || session.username,
-              avatarUrl: joinedMember?.avatarUrl ?? session.avatarUrl,
-              isReady: joinedMember?.isReady ?? false,
-              isHost: session.userId === room.host_id,
-              connected: true
+              id: session.userId,
+              username: session.username,
+              avatarUrl: session.avatarUrl,
+              isReady: false,
+              isHost: session.userId === room.host_id
             },
             currentCount: runtime.members.size,
             maxPlayers: room.max_players
@@ -399,21 +397,16 @@ async function setReady(session: ClientSession, payload: Record<string, unknown>
   }
   const member = room.members.get(session.userId!);
   if (!member) return;
-  const requestedReady = payload.isReady === true;
-  const { data: updatedMember, error } = await session.supabase!.from('room_players')
-    .update({ is_ready: requestedReady })
+  member.isReady = payload.isReady !== false;
+  const { error } = await session.supabase!.from('room_players')
+    .update({ is_ready: member.isReady })
     .eq('room_id', room.room.id)
-    .eq('player_id', session.userId)
-    .select('is_ready')
-    .maybeSingle();
-  if (error || !updatedMember) {
-    reply(session, Opcode.PLAYER_READY_BC, payload, {
-      success: false,
-      message: error?.message || 'Không tìm thấy thành viên trong phòng để cập nhật trạng thái.'
-    });
+    .eq('player_id', session.userId);
+  if (error) {
+    member.isReady = !member.isReady;
+    reply(session, Opcode.PLAYER_READY_BC, payload, { success: false, message: error.message });
     return;
   }
-  member.isReady = Boolean(updatedMember.is_ready);
   reply(session, Opcode.PLAYER_READY_BC, payload, { success: true, playerId: session.userId, isReady: member.isReady });
   broadcast(room, Opcode.PLAYER_READY_BC, { playerId: session.userId, isReady: member.isReady }, session.userId);
 }
@@ -522,18 +515,13 @@ async function startGame(session: ClientSession, payload: Record<string, unknown
     return;
   }
   const members = await loadMembers(session.supabase!, room.room.id);
-  const notReady = members.filter((member) => !member.isReady);
-  const disconnected = members.filter((member) => !room.sessions.has(member.id));
-  if (members.length !== room.room.max_players || notReady.length || disconnected.length) {
-    const reasons = [
-      members.length !== room.room.max_players ? `Cần đủ ${room.room.max_players} người chơi` : '',
-      notReady.length ? `Chưa sẵn sàng: ${notReady.map((member) => member.username).join(', ')}` : '',
-      disconnected.length ? `Mất kết nối: ${disconnected.map((member) => member.username).join(', ')}` : ''
-    ].filter(Boolean);
+  if (members.length !== room.room.max_players || members.some((member) =>
+    !member.isReady || !room.sessions.has(member.id)
+  )) {
     reply(session, Opcode.START_GAME_RES, payload, {
       success: false,
       errorCode: 2004,
-      message: `${reasons.join('. ')}.`
+      message: 'Chưa đủ người chơi, có người chưa sẵn sàng hoặc đang mất kết nối.'
     });
     return;
   }
