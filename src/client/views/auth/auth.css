@@ -730,3 +730,29 @@ body {
 .mode-register .login-only-options {
   display: none;
 }
+
+/* ==========================================================================
+   RESET PASSWORD MODE
+   ========================================================================== */
+.reset-fields {
+  display: none;
+}
+
+.mode-reset-password .reset-fields {
+  display: block;
+}
+
+.mode-reset-password div.options-row.reset-fields {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mode-reset-password .avatar-section,
+.mode-reset-password .card-tabs,
+.mode-reset-password .register-fields,
+.mode-reset-password .login-only-options,
+.mode-reset-password .social-section,
+.mode-reset-password .switch-auth-link,
+.mode-reset-password #groupPassword {
+  display: none;
+}

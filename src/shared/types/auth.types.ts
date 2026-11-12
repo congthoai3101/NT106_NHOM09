@@ -53,6 +53,8 @@ export interface ForgotPasswordFormInput {
 export interface ResetPasswordFormInput {
   newPassword: string;
   confirmNewPassword: string;
+  email: string,
+  otp: string
 }
 
 /**

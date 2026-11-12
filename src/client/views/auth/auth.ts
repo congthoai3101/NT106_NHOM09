@@ -23,6 +23,7 @@ interface ElectronAuthAPI {
   login: (input: any) => Promise<any>;
   register: (input: any) => Promise<any>;
   forgotPassword: (input: any) => Promise<any>;
+  resetPassword: (input: any) => Promise<any>;
   logout: () => Promise<any>;
   createRoom: (name: string, maxPlayers: number) => Promise<{
     id: string;
@@ -100,12 +101,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const rememberMe = document.getElementById('rememberMe') as HTMLInputElement;
   const linkForgotPassword = document.getElementById('linkForgotPassword') as HTMLAnchorElement;
 
+  // Các phần tử cho chế độ Quên / Đặt lại mật khẩu
+  const otpInput = document.getElementById('otpInput') as HTMLInputElement;
+  const newPasswordInput = document.getElementById('newPasswordInput') as HTMLInputElement;
+  const confirmNewPasswordInput = document.getElementById('confirmNewPasswordInput') as HTMLInputElement;
+  const toggleNewPasswordBtn = document.getElementById('toggleNewPassword') as HTMLButtonElement;
+  const linkBackToLogin = document.getElementById('linkBackToLogin') as HTMLAnchorElement;
+
   const btnAction = document.getElementById('btnAction') as HTMLButtonElement;
   const btnActionText = document.getElementById('btnActionText') as HTMLSpanElement;
   const toastNotice = document.getElementById('toastNotice') as HTMLDivElement;
   const toastMsg = document.getElementById('toastMsg') as HTMLSpanElement;
 
   let isRegisterMode = false;
+  let isResetMode = false;
+  let pendingResetEmail = '';
   let toastTimer: any = null;
   let currentAvatarIdx = 0;
 
@@ -176,6 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 5. Chuyển đổi giữa Chế độ Đăng nhập và Đăng ký
   function setMode(registerMode: boolean): void {
+    isResetMode = false;
+    mainCard.classList.remove('mode-reset-password');
     isRegisterMode = registerMode;
 
     if (isRegisterMode) {
@@ -209,6 +221,13 @@ document.addEventListener('DOMContentLoaded', () => {
     togglePasswordBtn.textContent = isPass ? 'Ẩn' : 'Hiện';
   });
 
+  toggleNewPasswordBtn?.addEventListener('click', () => {
+    const isPass = newPasswordInput.type === 'password';
+    newPasswordInput.type = isPass ? 'text' : 'password';
+    if (confirmNewPasswordInput) confirmNewPasswordInput.type = isPass ? 'text' : 'password';
+    toggleNewPasswordBtn.textContent = isPass ? 'Ẩn' : 'Hiện';
+  });
+
   // 7. Xử lý nút điều khiển cửa sổ Electron Frameless
   if (window.electronWindow) {
     btnMinimize?.addEventListener('click', () => window.electronWindow?.minimize());
@@ -230,6 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await window.electronAuth.forgotPassword({ email });
         if (res.success) {
           showToast('info', 'Đã gửi hướng dẫn khôi phục mật khẩu vào Email của bạn!');
+          pendingResetEmail = email;
+          isResetMode = true;
+          passwordInput.required = false;
+          mainCard.classList.add('mode-reset-password');
+          btnActionText.textContent = 'XÁC NHẬN ĐỔI MẬT KHẨU';
         } else {
           triggerCardShake(res.error || 'Không gửi được email khôi phục.');
         }
@@ -241,9 +265,81 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 9. Xử lý Submit Form (Đăng nhập / Đăng ký)
+  // Nút quay lại Đăng nhập khi đang ở chế độ Quên mật khẩu
+  linkBackToLogin?.addEventListener('click', () => {
+    isResetMode = false;
+    passwordInput.required = true;
+    mainCard.classList.remove('mode-reset-password');
+    btnActionText.textContent = isRegisterMode ? 'ĐĂNG KÝ NGAY' : 'VÀO SÒNG';
+  });
+
+  // 9. Xử lý Submit Form (Đăng nhập / Đăng ký / Đặt lại mật khẩu)
   authForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // Trường hợp 1: Đang ở chế độ Đặt lại Mật khẩu qua OTP
+    if (isResetMode) {
+      const email = pendingResetEmail || accountInput.value.trim();
+      const otp = otpInput.value.trim();
+      const newPassword = newPasswordInput.value;
+      const confirmNewPassword = confirmNewPasswordInput.value;
+
+      if (!email) {
+        triggerCardShake('Vui lòng nhập Email tài khoản để khôi phục.');
+        return;
+      }
+      if (otp.length !== 6) {
+        triggerCardShake('Mã OTP phải có đúng 6 chữ số.');
+        otpInput.focus();
+        return;
+      }
+      if (newPassword.length < 6 || newPassword.length > 25) {
+        triggerCardShake('Mật khẩu mới phải từ 6 đến 25 ký tự.');
+        newPasswordInput.focus();
+        return;
+      }
+      if (newPassword !== confirmNewPassword) {
+        triggerCardShake('Mật khẩu xác nhận không trùng khớp.');
+        confirmNewPasswordInput.focus();
+        return;
+      }
+
+      btnAction.disabled = true;
+      btnAction.classList.add('loading');
+
+      try {
+        if (window.electronAuth) {
+          const res = await window.electronAuth.resetPassword({
+            email,
+            otp,
+            newPassword,
+            confirmNewPassword
+          });
+
+          if (res.success) {
+            showToast('success', res.message || 'Đổi mật khẩu thành công! Vui lòng đăng nhập lại.');
+            isResetMode = false;
+            passwordInput.required = true;
+            mainCard.classList.remove('mode-reset-password');
+            btnActionText.textContent = 'VÀO SÒNG';
+            // Dọn sạch form
+            otpInput.value = '';
+            newPasswordInput.value = '';
+            confirmNewPasswordInput.value = '';
+            passwordInput.value = '';
+            accountInput.value = email;
+          } else {
+            triggerCardShake(res.message || 'Đổi mật khẩu không thành công.');
+          }
+        }
+      } catch (err: any) {
+        triggerCardShake(err.message || 'Lỗi hệ thống khi đổi mật khẩu.');
+      } finally {
+        btnAction.disabled = false;
+        btnAction.classList.remove('loading');
+      }
+      return;
+    }
 
     const account = accountInput.value.trim();
     const password = passwordInput.value;

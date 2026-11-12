@@ -4,6 +4,8 @@ import * as dotenv from 'dotenv';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { startTcpGameServer } from './game/tcpGameServer';
+import { error } from 'node:console';
+import { constants } from 'node:buffer';
 
 // ============================================================================
 // 1. CẤU HÌNH BIẾN MÔI TRƯỜNG & KHỞI TẠO BACKEND SUPABASE CLIENT
@@ -319,13 +321,12 @@ app.post('/api/auth/forgot-password', async (req: Request, res: Response): Promi
                 success: false,
                 message: 'Vui lòng nhập email'
             })
+            return;
         }
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: 'http://example.com/account/reset-password'
-        });
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email);
 
         if (error) {
-            res.status(200).json({
+            res.status(400).json({
                 success: false,
                 message: error.message
             });
@@ -345,7 +346,85 @@ app.post('/api/auth/forgot-password', async (req: Request, res: Response): Promi
 })
 
 app.post('/api/auth/reset-password', async (req: Request, res: Response): Promise<void> => {
-    
+    try {
+        const {email, otp, newPassword} = req.body;
+        if (!email || !otp || !newPassword){
+            res.status(400).json({
+                success: false,
+                message: 'Vui lòng nhập đầy đủ thông tin yêu cầu'
+            })
+            return
+        }
+
+        if (otp.length != 6) {
+            res.status(400).json({
+                success: false,
+                message: 'Vui lòng nhập mã đủ số lượng kí tự mã OTP'
+            })
+            return; 
+        }
+
+        if (newPassword.length < 6 || newPassword.length > 25) {
+            res.status(400).json({
+                success: false,
+                message: 'Mật khẩu phải từ 6 đến 25 kí tự'
+            })
+            return
+        }
+
+        const { data, error } = await supabase.auth.verifyOtp({email, token: otp, type:'recovery'})
+
+        if (error) {
+            res.status(400).json({
+                success: false,
+                message: 'Mã OTP không hợp lệ, vui lòng nhập lại',
+                error: error
+            })
+            return
+        }
+
+        const accessToken = data.session?.access_token;
+        if (!accessToken) {
+            res.status(403).json({
+              success: false,
+              message: 'Không có quyền'
+            })
+            return;
+        }
+
+        const userSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          global: {
+            headers: {
+              Authorization: `Bearer ${accessToken}` }}, 
+              auth: {persistSession:false, autoRefreshToken: false }
+            }
+          );
+
+          const {error: err} = await userSupabase.auth.updateUser({
+            password: newPassword
+          })
+
+          if (err) {
+            res.status(400).json({
+              success: false,
+              message: 'Đổi mật khẩu không thành công',
+              error: err
+            })
+            return;
+          }
+
+          res.status(200).json({
+            success: true,
+            message: 'Đổi mật khẩu thành công'
+          })
+
+    } catch(err:any) {
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi hệ thống',
+            error: err
+        })
+    }
 })
 
 

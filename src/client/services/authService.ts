@@ -3,8 +3,10 @@ import {
   LoginFormInput,
   RegisterFormInput,
   UserProfile,
-  AuthResponse
+  AuthResponse,
+  ResetPasswordFormInput
 } from '../../shared/types/auth.types';
+import { StatementResultingChanges } from 'node:sqlite';
 
 // Cổng Web API Gateway (Lấy từ .env hoặc mặc định 5000 / 20000)
 const API_PORT = process.env.PORT || 5000;
@@ -150,20 +152,28 @@ export class AuthService {
   /**
    * 4. Cập nhật mật khẩu mới
    */
-  static async resetPassword(newPassword: string): Promise<AuthResponse> {
+  static async resetPassword(input: ResetPasswordFormInput): Promise<AuthResponse> {
     try {
-      const { data, error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: input.email,
+          otp: input.otp,
+          newPassword: input.newPassword
+        })
+      })
 
-      if (error) {
-        throw new Error(this.formatErrorMessage(error.message));
+      const resJson = await response.json();
+      if (!response.ok || !resJson.success) {
+        throw new Error(this.formatErrorMessage(resJson.message || 'Đổi mật khẩu không thành công'));
       }
 
       return {
         success: true,
         message: 'Đổi mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới.',
-        data
       };
     } catch (err: any) {
       return {

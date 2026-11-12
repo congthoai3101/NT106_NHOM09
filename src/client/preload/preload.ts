@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { authStore } from '../state/authStore';
 import { RoomService } from '../services/roomService';
-import { LoginFormInput, RegisterFormInput, ForgotPasswordFormInput, AuthState, AuthResponse } from '../../shared/types/auth.types';
+import { LoginFormInput, RegisterFormInput, ForgotPasswordFormInput, AuthState, AuthResponse, ResetPasswordFormInput } from '../../shared/types/auth.types';
 
 // Expose các API điều khiển cửa sổ Frameless an toàn cho Renderer
 contextBridge.exposeInMainWorld('electronWindow', {
@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAuth', {
   login: (input: LoginFormInput): Promise<AuthResponse> => authStore.login(input),
   register: (input: RegisterFormInput): Promise<AuthResponse> => authStore.register(input),
   forgotPassword: (input: ForgotPasswordFormInput): Promise<AuthResponse> => authStore.forgotPassword(input),
+  resetPassword: (input: ResetPasswordFormInput): Promise<AuthResponse> => authStore.resetPassword(input),
   logout: async (): Promise<void> => {
     await ipcRenderer.invoke('game:leave');
     await authStore.logout();

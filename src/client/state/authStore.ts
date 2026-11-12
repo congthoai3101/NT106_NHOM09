@@ -6,7 +6,8 @@ import {
   LoginFormInput,
   RegisterFormInput,
   ForgotPasswordFormInput,
-  AuthResponse
+  AuthResponse,
+  ResetPasswordFormInput
 } from '../../shared/types/auth.types';
 
 export type StateListener = (state: AuthState) => void;
@@ -184,6 +185,13 @@ class AuthStore {
     return AuthService.forgotPassword(input.email);
   }
 
+    /**
+   * Yêu cầu reset mật khẩu
+   */ 
+  public async resetPassword(input: ResetPasswordFormInput): Promise<AuthResponse>{
+    return AuthService.resetPassword(input);
+  }
+
   /**
    * Thực hiện đăng xuất khỏi hệ thống
    */
@@ -201,6 +209,8 @@ class AuthStore {
       });
     }
   }
+
+
 
   /**
    * Hủy theo dõi sự kiện của Supabase khi đóng ứng dụng
