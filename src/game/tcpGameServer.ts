@@ -373,13 +373,15 @@ async function joinRoom(session: ClientSession, payload: Record<string, unknown>
 
         reply(session, Opcode.JOIN_ROOM_RES, payload, { success: true, room: roomSnapshot(runtime) });
         if (!wasConnected) {
+          const joinedMember = runtime.members.get(session.userId!);
           broadcast(runtime, Opcode.ROOM_USER_JOINED_BC, {
             player: {
-              id: session.userId,
-              username: session.username,
-              avatarUrl: session.avatarUrl,
-              isReady: false,
-              isHost: session.userId === room.host_id
+              id: joinedMember?.id || session.userId,
+              username: joinedMember?.username || session.username,
+              avatarUrl: joinedMember?.avatarUrl ?? session.avatarUrl,
+              isReady: joinedMember?.isReady ?? false,
+              isHost: session.userId === room.host_id,
+              connected: true
             },
             currentCount: runtime.members.size,
             maxPlayers: room.max_players
@@ -397,16 +399,21 @@ async function setReady(session: ClientSession, payload: Record<string, unknown>
   }
   const member = room.members.get(session.userId!);
   if (!member) return;
-  member.isReady = payload.isReady !== false;
-  const { error } = await session.supabase!.from('room_players')
-    .update({ is_ready: member.isReady })
+  const requestedReady = payload.isReady === true;
+  const { data: updatedMember, error } = await session.supabase!.from('room_players')
+    .update({ is_ready: requestedReady })
     .eq('room_id', room.room.id)
-    .eq('player_id', session.userId);
-  if (error) {
-    member.isReady = !member.isReady;
-    reply(session, Opcode.PLAYER_READY_BC, payload, { success: false, message: error.message });
+    .eq('player_id', session.userId)
+    .select('is_ready')
+    .maybeSingle();
+  if (error || !updatedMember) {
+    reply(session, Opcode.PLAYER_READY_BC, payload, {
+      success: false,
+      message: error?.message || 'Không tìm thấy thành viên trong phòng để cập nhật trạng thái.'
+    });
     return;
   }
+  member.isReady = Boolean(updatedMember.is_ready);
   reply(session, Opcode.PLAYER_READY_BC, payload, { success: true, playerId: session.userId, isReady: member.isReady });
   broadcast(room, Opcode.PLAYER_READY_BC, { playerId: session.userId, isReady: member.isReady }, session.userId);
 }
@@ -515,13 +522,18 @@ async function startGame(session: ClientSession, payload: Record<string, unknown
     return;
   }
   const members = await loadMembers(session.supabase!, room.room.id);
-  if (members.length !== room.room.max_players || members.some((member) =>
-    !member.isReady || !room.sessions.has(member.id)
-  )) {
+  const notReady = members.filter((member) => !member.isReady);
+  const disconnected = members.filter((member) => !room.sessions.has(member.id));
+  if (members.length !== room.room.max_players || notReady.length || disconnected.length) {
+    const reasons = [
+      members.length !== room.room.max_players ? `Cần đủ ${room.room.max_players} người chơi` : '',
+      notReady.length ? `Chưa sẵn sàng: ${notReady.map((member) => member.username).join(', ')}` : '',
+      disconnected.length ? `Mất kết nối: ${disconnected.map((member) => member.username).join(', ')}` : ''
+    ].filter(Boolean);
     reply(session, Opcode.START_GAME_RES, payload, {
       success: false,
       errorCode: 2004,
-      message: 'Chưa đủ người chơi, có người chưa sẵn sàng hoặc đang mất kết nối.'
+      message: `${reasons.join('. ')}.`
     });
     return;
   }
@@ -678,13 +690,44 @@ function handlePass(session: ClientSession, payload: Record<string, unknown>): v
   }
 }
 
-async function leaveRoom(session: ClientSession, payload: Record<string, unknown>): Promise<void> {
+async function closeRoom(room: RoomRuntime, reason: string): Promise<void> {
+  rooms.delete(room.room.id);
+  for (const timer of room.graceTimers.values()) clearTimeout(timer);
+  room.graceTimers.clear();
+  if (room.turnTimer) { clearTimeout(room.turnTimer); room.turnTimer = undefined; }
+  // Broadcast trước khi dọn sessions để các client còn kết nối nhận được thông báo
+  broadcast(room, Opcode.ROOM_CLOSED_BC, { roomId: room.room.id, reason });
+  for (const [pid, s] of room.sessions) {
+    s.roomId = undefined;
+    room.sessions.delete(pid);
+  }
+  const supabase = room.hostSupabase;
+  if (supabase) {
+    const { error } = await supabase.from('room_players').delete().eq('room_id', room.room.id);
+    if (error) console.error('[TCP Room Close - delete members error]:', error.message);
+    const { error: roomError } = await supabase.from('rooms')
+      .update({ status: 'closed' })
+      .eq('id', room.room.id);
+    if (roomError) console.error('[TCP Room Close - update status error]:', roomError.message);
+  }
+}async function leaveRoom(session: ClientSession, payload: Record<string, unknown>): Promise<void> {
   const room = session.roomId ? rooms.get(session.roomId) : undefined;
   if (!room) {
     reply(session, Opcode.LEAVE_ROOM_RES, payload, { success: true });
     return;
   }
   const playerId = session.userId!;
+  const isHost = playerId === room.room.host_id;
+
+  // Nếu chủ phòng rời và chưa có game → đóng phòng
+  if (isHost && !room.game) {
+    room.sessions.delete(playerId);
+    session.roomId = undefined;
+    reply(session, Opcode.LEAVE_ROOM_RES, payload, { success: true });
+    await closeRoom(room, 'Chủ phòng đã đóng phòng.');
+    return;
+  }
+
   room.sessions.delete(playerId);
   session.roomId = undefined;
 
@@ -787,14 +830,25 @@ function attachSocket(socket: Socket): void {
     if (session.userId && activeSessions.get(session.userId) === session) activeSessions.delete(session.userId);
     const room = session.roomId ? rooms.get(session.roomId) : undefined;
     if (!room || !session.userId || room.sessions.get(session.userId) !== session) return;
-    room.sessions.delete(session.userId);
+    const disconnectedUserId = session.userId;
+    const isHost = disconnectedUserId === room.room.host_id;
+    room.sessions.delete(disconnectedUserId);
+    session.roomId = undefined;
+
+    // Nếu chủ phòng ngắt kết nối mà chưa bắt đầu game → đóng phòng
+    if (isHost && !room.game) {
+      void withRoomLock(room.room.id, () => closeRoom(room, 'Chủ phòng đã mất kết nối.'))
+        .catch((error) => console.error('[TCP Room Close on Disconnect Error]:', error));
+      return;
+    }
+
     broadcast(room, Opcode.ROOM_USER_LEFT_BC, {
-      playerId: session.userId,
+      playerId: disconnectedUserId,
       currentCount: room.sessions.size,
       disconnected: true
     });
     if (room.game) {
-      scheduleForfeit(room, session.userId);
+      scheduleForfeit(room, disconnectedUserId);
       sendTurn(room);
     }
   });
