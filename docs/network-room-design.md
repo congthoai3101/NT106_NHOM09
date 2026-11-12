@@ -125,7 +125,10 @@ Hệ thống dự kiến hỗ trợ:
 - **Sẵn sàng:** Người chơi thông báo đã sẵn sàng.
 - **Bắt đầu ván:** Chỉ chủ phòng được yêu cầu bắt đầu; server kiểm tra điều kiện trước khi xử lý.
 - **Rời phòng:** Người chơi gửi yêu cầu rời phòng.
+- **Quay về sảnh:** Chỉ đổi màn hình; client vẫn giữ kết nối và tư cách thành viên trong phòng.
 - **Cập nhật phòng:** Server gửi thông báo khi thành viên hoặc trạng thái phòng thay đổi.
+
+Sảnh tải phòng đang chờ hoặc đang chơi của người dùng qua `GET /api/rooms/mine` (yêu cầu Bearer token). Kết quả bao gồm phòng do người dùng tạo và phòng họ đang tham gia, nên chủ phòng vẫn tìm thấy phòng của mình sau khi quay về sảnh. Chọn **Rời phòng** mới gửi yêu cầu rời phòng; trong lúc chờ, membership của người chơi được gỡ khỏi phòng.
 
 ### 4.3. Trạng thái phòng
 
@@ -148,6 +151,8 @@ Server chỉ cho phép bắt đầu khi:
 3. Số lượng người chơi phù hợp với chế độ đã chọn.
 4. Các người chơi cần thiết đã sẵn sàng.
 5. Phòng chưa có ván đấu đang diễn ra.
+
+Trạng thái sẵn sàng được lưu trong `room_players.is_ready`. Server chỉ phát thông báo thay đổi sau khi cập nhật thành công, và khi người chơi kết nối lại sẽ gửi trạng thái đã lưu thay vì mặc định là chưa sẵn sàng. Server cũng kiểm tra trạng thái sẵn sàng và kết nối hiện tại của từng người trước khi bắt đầu.
 
 Khi các điều kiện được đáp ứng, server chuyển phòng sang trạng thái `PLAYING`, tạo ván mới, chia bài và thông báo cho các client.
 

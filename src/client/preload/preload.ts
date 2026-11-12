@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('electronAuth', {
     await authStore.logout();
   },
   createRoom: (name: string, maxPlayers: number) => RoomService.createRoom(name, maxPlayers),
+  listMyRooms: () => RoomService.listMyRooms(),
   joinGameRoom: (roomCode: string) => {
     const accessToken = authStore.getState().session?.access_token;
     if (!accessToken) return Promise.reject(new Error('Phiên đăng nhập đã hết hạn.'));
