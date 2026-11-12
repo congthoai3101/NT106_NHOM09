@@ -11,23 +11,22 @@
 
 /* ----- Tiêu đề màn hình -------------------------------------------------- */
 .feature-heading { margin-bottom: 24px; }
-.feature-heading h1 { font-size: 26px; font-weight: 600; line-height: 1.25; }
-.feature-heading p { margin-top: 4px; color: var(--text-2); font-size: 14px; }
+.feature-heading h1 { font-size: var(--fs-title); font-weight: 700; line-height: 1.2; letter-spacing: -.2px; }
+.feature-heading p { margin-top: 6px; color: var(--text-2); font-size: var(--fs-body); }
 .back-link {
   display: inline-flex; align-items: center; gap: 6px;
-  margin: 0 0 16px; padding: 0 14px 0 10px; min-height: 34px;
-  border: 1px solid var(--border-strong); border-radius: var(--radius);
-  background: var(--surface-3); color: var(--text); font-size: 14px; font-weight: 600;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, .08) inset, 0 2px 4px rgba(0, 0, 0, .35);
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  margin: 0 0 12px -8px; padding: 0 14px 0 8px; min-height: 36px;
+  border: 0; border-radius: var(--radius);
+  background: transparent; color: var(--text-2); font-size: var(--fs-body); font-weight: 600;
+  transition: background var(--ease), color var(--ease), transform var(--ease);
 }
-.back-link svg { width: 18px; height: 18px; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.back-link:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: 0 1px 0 rgba(255, 255, 255, .1) inset, 0 4px 10px rgba(0, 0, 0, .45); }
-.back-link:active { transform: translateY(0); box-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
+.back-link svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.back-link:hover { background: var(--surface); color: var(--text); }
+.back-link:active { transform: translateX(-1px); }
 
 /* Khung nội dung dùng chung */
 .settings-card, .preview-card, .waiting-room-board, .ranking-table-card {
-  border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface);
+  border-radius: var(--radius-lg); background: var(--surface);
 }
 
 /* ----- Hộp thoại nhập mã phòng (giữa màn hình) -------------------------- */
@@ -44,11 +43,11 @@
   animation: pop-in .15s ease;
 }
 .modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
-.modal-header h2 { font-size: 18px; font-weight: 600; }
+.modal-header h2 { font-size: var(--fs-section); font-weight: 600; }
 .modal-header p { margin-top: 4px; color: var(--text-2); font-size: 14px; }
 .modal-header .icon-button { margin: -8px -8px 0 0; }
 .modal .field-label { margin-top: 0; }
-.modal .lobby-input { min-height: 44px; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; }
+.modal .lobby-input { min-height: 48px; font-size: 18px; letter-spacing: 1px; text-transform: uppercase; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
 @keyframes fade-in { from { opacity: 0; } }
 @keyframes pop-in { from { opacity: 0; transform: translateY(8px) scale(.98); } }
@@ -60,7 +59,7 @@
 .setting-note { margin: 24px 0; padding: 12px 16px; border-radius: var(--radius); background: var(--surface-2); }
 .setting-note p { display: grid; gap: 4px; }
 .setting-note strong { font-size: 14px; font-weight: 600; }
-.setting-note small { color: var(--text-2); font-size: 13px; line-height: 1.5; }
+.setting-note small { color: var(--text-2); font-size: 14px; line-height: 1.5; }
 .settings-card .primary-button { align-self: flex-start; }
 
 .preview-card { display: flex; flex-direction: column; padding: 16px 16px 12px; }
@@ -71,24 +70,24 @@
 }
 .preview-seat {
   position: absolute; padding: 4px 10px; border-radius: var(--radius);
-  background: rgba(0, 0, 0, .35); color: #e4efe8; font-size: 12px;
+  background: rgba(0, 0, 0, .35); color: #e4efe8; font-size: 13px;
 }
 .preview-seat-top { top: 16px; }
 .preview-seat-left { top: 46%; left: 24px; }
 .preview-seat-right { top: 46%; right: 24px; }
 .preview-seat-bottom { bottom: 16px; background: var(--accent); color: var(--on-accent); font-weight: 600; }
 .preview-emblem { display: grid; place-items: center; color: rgba(255, 255, 255, .3); font-size: 44px; line-height: 1; }
-.preview-emblem small { margin-top: 4px; font-size: 13px; font-weight: 600; }
-.preview-foot { color: var(--text-3); font-size: 13px; }
+.preview-emblem small { margin-top: 4px; font-size: 14px; font-weight: 600; }
+.preview-foot { color: var(--text-3); font-size: 14px; }
 .preview-card .text-button { align-self: flex-start; margin-top: 8px; }
 
 /* ----- Phòng chờ --------------------------------------------------------- */
 .waiting-room-board { padding: 24px; }
 .waiting-room-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-.waiting-room-toolbar h2 { margin-top: 8px; font-size: 18px; font-weight: 600; }
-.room-status-pill { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 13px; }
+.waiting-room-toolbar h2 { margin-top: 8px; font-size: var(--fs-section); font-weight: 600; }
+.room-status-pill { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 14px; }
 .room-status-pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
-.room-code-box { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 13px; }
+.room-code-box { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 14px; }
 .room-code-box strong { color: var(--gold); font-family: Consolas, "Cascadia Mono", monospace; font-size: 18px; font-weight: 600; letter-spacing: 1px; }
 .room-code-box button {
   display: grid; place-items: center; width: 32px; height: 32px; padding: 0;
@@ -108,11 +107,11 @@
 .waiting-avatar { display: grid; place-items: center; width: 56px; height: 56px; overflow: hidden; border-radius: 50%; background: var(--surface-3); color: var(--text-2); font-size: 22px; font-weight: 600; }
 .waiting-avatar img, .table-avatar img { width: 100%; height: 100%; border: 0; border-radius: inherit; object-fit: cover; }
 .waiting-seat strong { max-width: 100%; margin-top: 12px; overflow: hidden; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.waiting-seat small { margin-top: 4px; color: var(--text-2); font-size: 13px; }
-.seat-check { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 12px; font-weight: 700; }
+.waiting-seat small { margin-top: 4px; color: var(--text-2); font-size: 14px; }
+.seat-check { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 700; }
 
 .waiting-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-top: 1px solid var(--border); }
-.waiting-hint { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 13px; }
+.waiting-hint { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 14px; }
 .waiting-hint i { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
 .room-actions { display: flex; gap: 8px; }
 .screen-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
@@ -123,8 +122,8 @@
 .table-toolbar .back-link { margin: 0; }
 .table-title { display: grid; }
 .table-title strong { font-size: 16px; font-weight: 600; }
-.table-title .feature-kicker { color: var(--text-3); font-size: 13px; }
-.table-round { display: flex; align-items: center; gap: 12px; margin-left: auto; color: var(--text-2); font-size: 13px; }
+.table-title .feature-kicker { color: var(--text-3); font-size: 14px; }
+.table-round { display: flex; align-items: center; gap: 12px; margin-left: auto; color: var(--text-2); font-size: 14px; }
 .table-round strong { color: var(--text); font-size: 14px; font-weight: 600; }
 .table-round span { color: var(--gold); }
 
@@ -144,19 +143,19 @@
 .table-seat-right { top: 50%; right: 16px; transform: translateY(-50%); }
 .table-avatar { display: grid; place-items: center; width: 36px; height: 36px; overflow: hidden; border-radius: 50%; background: rgba(255, 255, 255, .15); color: #fff; font-size: 16px; font-weight: 600; }
 .table-seat-bottom .table-avatar { background: var(--accent); color: var(--on-accent); }
-.table-seat strong { max-width: 140px; overflow: hidden; color: #fff; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.table-seat small { color: #cfe0d5; font-size: 12px; }
+.table-seat strong { max-width: 140px; overflow: hidden; color: #fff; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.table-seat small { color: #cfe0d5; font-size: 13px; }
 .table-center { position: absolute; top: 50%; left: 50%; display: grid; justify-items: center; gap: 4px; width: 240px; transform: translate(-50%, -50%); text-align: center; }
 .table-suit { display: none; }
 .table-center > strong { color: #fff; font-size: 15px; font-weight: 600; }
-.table-center > small { color: #cfe0d5; font-size: 13px; }
+.table-center > small { color: #cfe0d5; font-size: 14px; }
 .deck-back { display: grid; place-items: center; width: 44px; height: 62px; margin-top: 8px; border: 2px solid #e8efe9; border-radius: 6px; background: #17452e; color: rgba(255, 255, 255, .7); font-size: 20px; }
 .deck-back i { display: none; }
 
-.game-controls { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px 16px; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); }
+.game-controls { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px 16px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--surface); }
 .hand-caption { display: flex; align-items: baseline; gap: 12px; }
 .hand-caption strong { font-size: 14px; font-weight: 600; }
-.hand-caption span { color: var(--text-2); font-size: 13px; }
+.hand-caption span { color: var(--text-2); font-size: 14px; }
 .hand-placeholder { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; min-height: 72px; border: 1px dashed var(--border-strong); border-radius: var(--radius); color: var(--text-2); font-size: 14px; }
 .hand-placeholder span { display: none; }
 .hand-cards { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; min-height: 84px; padding: 12px 8px 8px; }
@@ -167,10 +166,10 @@
 .playing-card:disabled { cursor: not-allowed; opacity: .5; }
 .turn-actions { display: flex; gap: 8px; }
 
-.table-chat { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); color: var(--text-2); font-size: 13px; }
+.table-chat { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-lg); background: var(--surface); color: var(--text-2); font-size: 14px; }
 .chat-icon { display: none; }
-.table-chat input { flex: 1; min-width: 0; height: 32px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text-3); font-size: 13px; }
-.table-chat button { height: 32px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); color: var(--text-3); font-size: 13px; }
+.table-chat input { flex: 1; min-width: 0; height: 32px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text-3); font-size: 14px; }
+.table-chat button { height: 32px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); color: var(--text-3); font-size: 14px; }
 .table-chat input:disabled, .table-chat button:disabled { cursor: not-allowed; }
 
 /* ----- Bảng xếp hạng ----------------------------------------------------- */
@@ -179,11 +178,11 @@
 .period-button { min-height: 32px; padding: 0 16px; border: 0; border-radius: 4px; background: transparent; color: var(--text-2); font-size: 14px; }
 .period-button:hover { background: var(--surface-2); color: var(--text); }
 .period-button.selected { background: var(--surface-3); color: var(--text); font-weight: 600; }
-.ranking-season { color: var(--text-2); font-size: 13px; }
+.ranking-season { color: var(--text-2); font-size: 14px; }
 .ranking-season strong { color: var(--text); font-weight: 600; }
 
 .ranking-table-card { overflow: hidden; }
-.ranking-columns { display: grid; grid-template-columns: 72px 1fr 112px 128px 112px; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); font-size: 13px; font-weight: 600; }
+.ranking-columns { display: grid; grid-template-columns: 72px 1fr 112px 128px 112px; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); font-size: 14px; font-weight: 600; }
 .ranking-columns span:nth-child(n+3) { text-align: right; }
 .ranking-empty { display: grid; justify-items: center; gap: 4px; padding: 48px 16px; text-align: center; }
 .ranking-empty strong { font-size: 15px; font-weight: 600; }
@@ -208,5 +207,5 @@
 }
 @media (max-height: 640px) {
   .game-table { height: 240px; }
-  .table-avatar { width: 28px; height: 28px; font-size: 13px; }
+  .table-avatar { width: 28px; height: 28px; font-size: 14px; }
 }
