@@ -891,7 +891,7 @@ export function startTcpGameServer(): Server | null {
 
   server.on('error', (error) => console.error('[TCP Game Server Error]:', error));
   server.listen(port, host, () => {
-    console.log(`[TCP Game Server] Đang lắng nghe ${host}:${port}${keyPath ? ' (TLS)' : ' (không mã hóa; chỉ dùng phát triển cục bộ)'}`);
+    console.log(`[TCP Game Server] Đang lắng nghe ${host}:${port}`);
   });
   return server;
 }
