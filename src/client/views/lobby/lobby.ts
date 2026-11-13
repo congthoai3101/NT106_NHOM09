@@ -521,9 +521,11 @@ document.addEventListener('DOMContentLoaded', () => {
       renderRooms();
     } catch (error) {
       console.error('[My Rooms Error]:', error);
-      setEmptyState('Không thể tải danh sách phòng', 'Kiểm tra kết nối máy chủ rồi thử lại.');
-      emptyState.classList.add('error', 'visible');
-      showToast(error instanceof Error ? error.message : 'Không thể tải danh sách phòng.');
+      if (playerRooms.length === 0) {
+        emptyState.classList.remove('error');
+        setEmptyState('Chưa có phòng nào được tạo', 'Chọn “Tạo phòng” hoặc “Nhập mã phòng” để bắt đầu một ván cùng bạn bè.');
+        emptyState.classList.add('visible');
+      }
     }
   }
 
